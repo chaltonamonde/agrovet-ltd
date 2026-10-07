@@ -1,0 +1,529 @@
+/* ==========================================================================
+   Agrovet Ltd - Enterprise Dark Theme Design System
+   Brand Direction: High-Trust Kenyan Digital Agrovet
+   Palette: Deep Navy (#050B18 - #0A1428) + Royal Blue (#1E6BFF) + Rich Gold (#D4A017 - #F5C542)
+   ========================================================================== */
+
+:root {
+  /* Surface & Background Colors */
+  --bg-primary: #050B18;
+  --bg-secondary: #0A1428;
+  --bg-card: #0D1B36;
+  --bg-card-hover: #122347;
+  --bg-card-elevated: #162B57;
+  --bg-surface: #0E1E3D;
+  --bg-overlay: rgba(5, 11, 24, 0.85);
+
+  /* Brand Accents - Rich Gold (Primary CTA, Prices, Highlights) */
+  --gold-300: #FDE047;
+  --gold-400: #FACC15;
+  --gold-500: #F5C542;
+  --gold-600: #D4A017;
+  --gold-700: #A1760E;
+  --gold-gradient: linear-gradient(135deg, #F5C542 0%, #D4A017 100%);
+  --gold-glow: 0 0 25px rgba(245, 197, 66, 0.35);
+
+  /* Brand Accents - Electric & Royal Blue (Glows, Secondary, Badges) */
+  --blue-400: #60A5FA;
+  --blue-500: #3B82F6;
+  --blue-600: #1E6BFF;
+  --blue-700: #144FCC;
+  --blue-800: #0E3696;
+  --blue-glow: 0 0 25px rgba(30, 107, 255, 0.35);
+  --blue-border-glow: 0 0 15px rgba(30, 107, 255, 0.25);
+
+  /* Status & Compliance Colors */
+  --color-success: #10B981;
+  --color-success-bg: rgba(16, 185, 129, 0.12);
+  --color-warning: #F59E0B;
+  --color-warning-bg: rgba(245, 158, 11, 0.12);
+  --color-danger: #EF4444;
+  --color-danger-bg: rgba(239, 68, 68, 0.15);
+  --color-whatsapp: #25D366;
+  --color-whatsapp-hover: #1EBE5D;
+
+  /* Typography Colors - Strong Contrast (WCAG AA Certified) */
+  --text-primary: #FFFFFF;
+  --text-secondary: #E2E8F0;
+  --text-muted: #94A3B8;
+  --text-dim: #64748B;
+  --text-dark: #050B18;
+
+  /* Borders & Dividers */
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-card: rgba(30, 107, 255, 0.22);
+  --border-card-hover: rgba(245, 197, 66, 0.45);
+  --border-gold: rgba(245, 197, 66, 0.3);
+
+  /* Typography Families */
+  --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.6);
+  --shadow-card: 0 8px 24px -4px rgba(2, 6, 23, 0.7), 0 0 0 1px var(--border-card);
+  --shadow-card-hover: 0 14px 34px -4px rgba(2, 6, 23, 0.85), 0 0 20px rgba(30, 107, 255, 0.3);
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 350ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ==========================================================================
+   Base Styles & Reset
+   ========================================================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: var(--font-body);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  position: relative;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+::-webkit-scrollbar-thumb {
+  background: #1A3163;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--blue-600);
+}
+
+/* Typography Hierarchy */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  color: var(--text-primary);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+a {
+  color: var(--blue-400);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+a:hover {
+  color: var(--gold-400);
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+/* Container */
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* ==========================================================================
+   Buttons System
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.4rem;
+  font-size: 0.925rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  white-space: nowrap;
+  user-select: none;
+  text-decoration: none;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--gold-400);
+  outline-offset: 2px;
+}
+
+/* Primary Button - Rich Gold */
+.btn-primary {
+  background: var(--gold-gradient);
+  color: var(--text-dark);
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(212, 160, 23, 0.4);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 197, 66, 0.55);
+  color: var(--text-dark);
+  background: linear-gradient(135deg, #FFDE59 0%, #E0A71E 100%);
+}
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Secondary Button - Royal Blue Glow */
+.btn-secondary {
+  background: var(--blue-600);
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(30, 107, 255, 0.4);
+}
+.btn-secondary:hover {
+  background: #2D76FF;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(30, 107, 255, 0.6);
+  color: #FFFFFF;
+}
+
+/* Outline Button */
+.btn-outline {
+  background: rgba(30, 107, 255, 0.08);
+  border: 1px solid var(--border-card);
+  color: var(--text-primary);
+}
+.btn-outline:hover {
+  background: rgba(30, 107, 255, 0.2);
+  border-color: var(--blue-400);
+  color: #FFFFFF;
+  transform: translateY(-2px);
+}
+
+/* Outline Gold Button */
+.btn-outline-gold {
+  background: rgba(245, 197, 66, 0.06);
+  border: 1px solid var(--border-gold);
+  color: var(--gold-400);
+}
+.btn-outline-gold:hover {
+  background: rgba(245, 197, 66, 0.16);
+  border-color: var(--gold-400);
+  color: var(--gold-300);
+  transform: translateY(-2px);
+}
+
+/* WhatsApp Button */
+.btn-whatsapp {
+  background: var(--color-whatsapp);
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.35);
+}
+.btn-whatsapp:hover {
+  background: var(--color-whatsapp-hover);
+  color: #FFFFFF;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.5);
+}
+
+.btn-sm {
+  padding: 0.5rem 0.9rem;
+  font-size: 0.825rem;
+  border-radius: var(--radius-sm);
+}
+
+.btn-lg {
+  padding: 0.95rem 1.9rem;
+  font-size: 1.05rem;
+  border-radius: var(--radius-lg);
+}
+
+.btn-icon {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: var(--radius-md);
+}
+
+/* ==========================================================================
+   Glass & Card Components
+   ========================================================================== */
+.card-glass {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition-normal);
+}
+
+.card-glass:hover {
+  border-color: rgba(30, 107, 255, 0.45);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.card-interactive:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-card-hover);
+  box-shadow: 0 16px 36px -4px rgba(2, 6, 23, 0.85), 0 0 25px rgba(245, 197, 66, 0.2);
+}
+
+/* Subtle Glowing Borders */
+.border-glow-blue {
+  border: 1px solid rgba(30, 107, 255, 0.35);
+  box-shadow: 0 0 15px rgba(30, 107, 255, 0.15);
+}
+.border-glow-gold {
+  border: 1px solid rgba(245, 197, 66, 0.35);
+  box-shadow: 0 0 15px rgba(245, 197, 66, 0.15);
+}
+
+/* ==========================================================================
+   Badges System
+   ========================================================================== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-full);
+  font-size: 0.725rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.badge-gold {
+  background: rgba(245, 197, 66, 0.15);
+  color: var(--gold-400);
+  border: 1px solid rgba(245, 197, 66, 0.4);
+}
+
+.badge-blue {
+  background: rgba(30, 107, 255, 0.15);
+  color: var(--blue-400);
+  border: 1px solid rgba(30, 107, 255, 0.35);
+}
+
+.badge-restricted {
+  background: rgba(239, 68, 68, 0.18);
+  color: #FCA5A5;
+  border: 1px solid rgba(239, 68, 68, 0.45);
+}
+
+.badge-success {
+  background: var(--color-success-bg);
+  color: #6EE7B7;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.badge-warning {
+  background: var(--color-warning-bg);
+  color: #FCD34D;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+/* ==========================================================================
+   Form Controls (Dark Theme Optimized)
+   ========================================================================== */
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: #071228;
+  border: 1px solid rgba(30, 107, 255, 0.25);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.925rem;
+  transition: all var(--transition-fast);
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none;
+  border-color: var(--gold-400);
+  box-shadow: 0 0 0 3px rgba(245, 197, 66, 0.2);
+  background-color: #0A1733;
+}
+
+.form-input::placeholder, .form-textarea::placeholder {
+  color: var(--text-dim);
+}
+
+.form-select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394A3B8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1.25rem;
+  padding-right: 2.5rem;
+  appearance: none;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.4rem;
+}
+
+/* ==========================================================================
+   Modals & Drawers Overlays
+   ========================================================================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-overlay);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 11, 24, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+}
+
+/* ==========================================================================
+   Animations & Motion Preferences
+   ========================================================================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(245, 197, 66, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(245, 197, 66, 0.6);
+  }
+}
+
+@keyframes floatBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-float {
+  animation: floatBob 3.5s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s infinite;
+}
+
+/* Accessibility: Respect Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   Helper Utilities
+   ========================================================================== */
+.text-gold {
+  color: var(--gold-400);
+}
+.text-blue {
+  color: var(--blue-400);
+}
+.text-gradient-gold {
+  background: var(--gold-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.text-gradient-blue {
+  background: linear-gradient(135deg, #60A5FA 0%, #1E6BFF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.price-tag {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--gold-400);
+  letter-spacing: -0.01em;
+}
+
+.price-strike {
+  text-decoration: line-through;
+  color: var(--text-dim);
+  font-size: 0.85em;
+  margin-left: 0.4rem;
+}
