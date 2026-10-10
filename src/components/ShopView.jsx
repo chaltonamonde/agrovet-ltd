@@ -26,7 +26,8 @@ export default function ShopView({
   setSearchQuery,
   onAddToCart,
   onOpenProductModal,
-  onConsultProduct
+  onConsultProduct,
+  products = PRODUCTS
 }) {
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
   const [sortBy, setSortBy] = useState('popular'); // 'popular' | 'price-low' | 'price-high' | 'rating'
@@ -39,9 +40,9 @@ export default function ShopView({
 
   // Extract distinct brands and target types
   const brands = useMemo(() => {
-    const list = Array.from(new Set(PRODUCTS.map(p => p.brand)));
+    const list = Array.from(new Set((products || PRODUCTS).map(p => p.brand)));
     return ['all', ...list];
-  }, []);
+  }, [products]);
 
   const targets = [
     'all',
@@ -55,7 +56,7 @@ export default function ShopView({
 
   // Filter and sort products
   const filteredProducts = useMemo(() => {
-    return PRODUCTS.filter(prod => {
+    return (products || PRODUCTS).filter(prod => {
       // Category filter
       if (selectedCategory && selectedCategory !== 'all' && prod.category !== selectedCategory) {
         return false;

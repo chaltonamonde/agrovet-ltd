@@ -7,22 +7,24 @@ export default function FeaturedProducts({
   onAddToCart, 
   onOpenProductModal, 
   onConsultProduct, 
-  onViewAll 
+  onViewAll,
+  products = PRODUCTS
 }) {
   const [activeTab, setActiveTab] = useState('best-sellers');
 
   const getFilteredProducts = () => {
+    const list = products || PRODUCTS;
     switch (activeTab) {
       case 'best-sellers':
-        return PRODUCTS.filter(p => p.isBestSeller).slice(0, 4);
+        return list.filter(p => p.isBestSeller).slice(0, 4);
       case 'veterinary':
-        return PRODUCTS.filter(p => p.category === 'veterinary-drugs' || p.category === 'dairy').slice(0, 4);
+        return list.filter(p => p.category === 'veterinary-drugs' || p.category === 'dairy').slice(0, 4);
       case 'crops':
-        return PRODUCTS.filter(p => p.category === 'crop-chemicals' || p.category === 'fertilizers').slice(0, 4);
+        return list.filter(p => p.category === 'crop-chemicals' || p.category === 'fertilizers').slice(0, 4);
       case 'seeds-feeds':
-        return PRODUCTS.filter(p => p.category === 'seeds' || p.category === 'animal-feeds').slice(0, 4);
+        return list.filter(p => p.category === 'seeds' || p.category === 'animal-feeds').slice(0, 4);
       default:
-        return PRODUCTS.slice(0, 4);
+        return list.slice(0, 4);
     }
   };
 

@@ -14,6 +14,7 @@ import ConsultationSection from './components/ConsultationSection';
 import LearnSection from './components/LearnSection';
 import AboutSection from './components/AboutSection';
 import ContactSection from './components/ContactSection';
+import AdminPanel from './components/AdminPanel';
 import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
 import CheckoutModal from './components/CheckoutModal';
@@ -23,12 +24,86 @@ import AccountModal from './components/AccountModal';
 import RestockDiscountModal from './components/RestockDiscountModal';
 import StickyWhatsApp from './components/StickyWhatsApp';
 import BackToTop from './components/BackToTop';
+import { PRODUCTS } from './data/products';
+import { INITIAL_ORDERS, INITIAL_SERVICE_BOOKINGS } from './data/adminData';
 
 export default function App() {
   // Navigation & View State
-  const [activeView, setActiveView] = useState('home'); // 'home' | 'shop' | 'consultation' | 'learn' | 'about' | 'contact'
+  const [activeView, setActiveView] = useState('home'); // 'home' | 'shop' | 'consultation' | 'learn' | 'about' | 'contact' | 'admin'
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+
+  // Dynamic Catalog State with LocalStorage Persistence (Edit the Whole Shop)
+  const [products, setProducts] = useState(() => {
+    try {
+      const saved = localStorage.getItem('agrovet_products');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.warn('Failed to parse saved products from localStorage:', e);
+    }
+    return PRODUCTS;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('agrovet_products', JSON.stringify(products));
+    } catch (e) {
+      console.warn('Failed to save products to localStorage:', e);
+    }
+  }, [products]);
+
+  // Dynamic Customer Orders State with LocalStorage Persistence
+  const [orders, setOrders] = useState(() => {
+    try {
+      const saved = localStorage.getItem('agrovet_orders');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.warn('Failed to parse saved orders from localStorage:', e);
+    }
+    return INITIAL_ORDERS;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('agrovet_orders', JSON.stringify(orders));
+    } catch (e) {
+      console.warn('Failed to save orders to localStorage:', e);
+    }
+  }, [orders]);
+
+  // Dynamic Service Bookings State
+  const [services, setServices] = useState(() => {
+    try {
+      const saved = localStorage.getItem('agrovet_services');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.warn('Failed to parse saved services from localStorage:', e);
+    }
+    return INITIAL_SERVICE_BOOKINGS;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('agrovet_services', JSON.stringify(services));
+    } catch (e) {
+      console.warn('Failed to save services to localStorage:', e);
+    }
+  }, [services]);
+
+  // Reset to original factory products
+  const handleResetDefaultProducts = () => {
+    setProducts(PRODUCTS);
+    try {
+      localStorage.removeItem('agrovet_products');
+    } catch (e) {}
+    showToast('Catalog restored to original factory defaults!');
+  };
+
+  // Add new completed order
+  const handleAddOrder = (newOrder) => {
+    setOrders(prev => [newOrder, ...prev]);
+    showToast(`Order ${newOrder.id} logged in system!`);
+  };
 
   // Shopping Cart State
   const [cartItems, setCartItems] = useState([
@@ -188,6 +263,7 @@ export default function App() {
             />
 
             <FeaturedProducts 
+              products={products}
               onAddToCart={handleAddToCart}
               onOpenProductModal={(p) => setSelectedProductModal(p)}
               onConsultProduct={handleConsultProduct}
@@ -210,6 +286,7 @@ export default function App() {
 
         {activeView === 'shop' && (
           <ShopView 
+            products={products}
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
             searchQuery={searchQuery}
@@ -237,14 +314,29 @@ export default function App() {
         {activeView === 'contact' && (
           <ContactSection />
         )}
+
+        {activeView === 'admin' && (
+          <AdminPanel 
+            products={products}
+            setProducts={setProducts}
+            orders={orders}
+            setOrders={setOrders}
+            services={services}
+            setServices={setServices}
+            onBackToShop={() => setActiveView('shop')}
+            onResetDefaultProducts={handleResetDefaultProducts}
+          />
+        )}
       </div>
 
-      {/* Global Footer */}
-      <Footer 
-        setActiveView={setActiveView}
-        onOpenWholesale={() => setIsWholesaleOpen(true)}
-        onOpenConsultation={() => setActiveView('consultation')}
-      />
+      {/* Global Footer (shown on storefront views) */}
+      {activeView !== 'admin' && (
+        <Footer 
+          setActiveView={setActiveView}
+          onOpenWholesale={() => setIsWholesaleOpen(true)}
+          onOpenConsultation={() => setActiveView('consultation')}
+        />
+      )}
 
       {/* Slide-out Cart Drawer */}
       <CartDrawer 
@@ -263,6 +355,7 @@ export default function App() {
         onClose={() => setIsCheckoutOpen(false)}
         cartItems={cartItems}
         onClearCart={handleClearCart}
+        onAddOrder={handleAddOrder}
       />
 
       {/* Product Deep-dive Modal */}
@@ -283,6 +376,7 @@ export default function App() {
       <AccountModal 
         isOpen={isAccountOpen}
         onClose={() => setIsAccountOpen(false)}
+        onOpenAdmin={() => setActiveView('admin')}
         onReorder={(order) => {
           showToast('Previous order items loaded to cart!');
           setIsCartOpen(true);

@@ -131,6 +131,22 @@ export default function Footer({ setActiveView, onOpenWholesale, onOpenConsultat
                   → Wholesale & Bulk Quotations
                 </button>
               </li>
+              <li>
+                <button
+                  onClick={() => setActiveView('admin')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#60A5FA',
+                    cursor: 'pointer',
+                    padding: 0,
+                    fontSize: '0.875rem',
+                    fontWeight: 700
+                  }}
+                >
+                  🛡️ Staff Admin Operations Console
+                </button>
+              </li>
             </ul>
           </div>
 

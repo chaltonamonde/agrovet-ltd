@@ -13,7 +13,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 
-export default function AccountModal({ isOpen, onClose, onReorder }) {
+export default function AccountModal({ isOpen, onClose, onReorder, onOpenAdmin }) {
   if (!isOpen) return null;
 
   const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'addresses' | 'rewards'
@@ -120,14 +120,33 @@ export default function AccountModal({ isOpen, onClose, onReorder }) {
             </div>
           </div>
 
-          <button 
-            onClick={onClose}
-            className="btn btn-icon btn-outline"
-            style={{ width: '34px', height: '34px', borderRadius: '50%' }}
-            aria-label="Close modal"
-          >
-            <X size={17} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <button 
+              onClick={() => {
+                onClose();
+                if (onOpenAdmin) onOpenAdmin();
+              }}
+              className="btn btn-sm btn-outline"
+              style={{
+                borderColor: '#F5C542',
+                color: '#F5C542',
+                backgroundColor: 'rgba(245, 197, 66, 0.1)',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                padding: '0.35rem 0.65rem'
+              }}
+            >
+              🛡️ Admin Console
+            </button>
+            <button 
+              onClick={onClose}
+              className="btn btn-icon btn-outline"
+              style={{ width: '34px', height: '34px', borderRadius: '50%' }}
+              aria-label="Close modal"
+            >
+              <X size={17} />
+            </button>
+          </div>
         </div>
 
         {/* Tab Navigation */}

@@ -20,7 +20,8 @@ export default function CheckoutModal({
   isOpen, 
   onClose, 
   cartItems, 
-  onClearCart 
+  onClearCart,
+  onAddOrder
 }) {
   if (!isOpen) return null;
 
@@ -108,6 +109,37 @@ export default function CheckoutModal({
       });
     } catch (e) {
       // ignore if confetti script fails
+    }
+
+    if (onAddOrder) {
+      onAddOrder({
+        id: randomOrderId,
+        date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+        time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+        status: 'Processing',
+        customerName: formData.fullName,
+        phone: formData.phone,
+        email: formData.email,
+        county: selectedZone.county,
+        town: formData.town,
+        landmark: formData.farmLandmark,
+        notes: formData.notes,
+        paymentMethod: formData.paymentMethod === 'mpesa' ? 'M-Pesa STK Push' : 'Cash on Delivery',
+        mpesaRef: randomMpesaCode,
+        items: cartItems.map(item => ({
+          id: item.id,
+          name: item.name,
+          brand: item.brand,
+          pack: item.selectedPack,
+          qty: item.quantity,
+          price: item.price,
+          total: item.price * item.quantity,
+          image: item.image
+        })),
+        subtotal: itemsTotal,
+        deliveryFee: deliveryFee,
+        total: grandTotal
+      });
     }
 
     onClearCart();

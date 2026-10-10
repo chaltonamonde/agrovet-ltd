@@ -107,6 +107,25 @@ export default function Navbar({
               <Building size={13} />
               <span>Wholesale & Bulk Quotes</span>
             </button>
+            <button
+              onClick={() => setActiveView('admin')}
+              style={{
+                background: 'rgba(245, 197, 66, 0.1)',
+                border: '1px solid rgba(245, 197, 66, 0.4)',
+                color: '#F5C542',
+                cursor: 'pointer',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                padding: '0.2rem 0.6rem',
+                borderRadius: '6px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.25rem'
+              }}
+            >
+              <ShieldCheck size={13} />
+              <span>Admin Portal</span>
+            </button>
           </div>
         </div>
       </div>
@@ -274,6 +293,26 @@ export default function Navbar({
               <span>Ask Vet</span>
             </button>
 
+            {/* Admin Console Trigger */}
+            <button
+              onClick={() => setActiveView('admin')}
+              className="btn btn-sm btn-outline desktop-admin-btn"
+              style={{
+                borderColor: activeView === 'admin' ? '#F5C542' : 'rgba(245, 197, 66, 0.4)',
+                backgroundColor: activeView === 'admin' ? 'rgba(245, 197, 66, 0.15)' : 'rgba(10, 23, 51, 0.6)',
+                color: '#F5C542',
+                padding: '0.55rem 0.85rem',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                gap: '0.35rem',
+                display: 'none'
+              }}
+              title="Store Owner & Admin Operations Panel"
+            >
+              <ShieldCheck size={15} color="#F5C542" />
+              <span>Admin Panel</span>
+            </button>
+
             {/* Account Profile */}
             <button
               onClick={onOpenAccount}
@@ -393,6 +432,35 @@ export default function Navbar({
                 </button>
               ))}
 
+              {/* Mobile Admin Portal button */}
+              <button
+                onClick={() => {
+                  setActiveView('admin');
+                  setMobileMenuOpen(false);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '8px',
+                  background: activeView === 'admin' ? 'rgba(245, 197, 66, 0.2)' : 'rgba(245, 197, 66, 0.08)',
+                  border: '1.5px solid #F5C542',
+                  color: '#F5C542',
+                  fontSize: '0.95rem',
+                  fontWeight: 700,
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  marginTop: '0.25rem'
+                }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <ShieldCheck size={18} color="#F5C542" />
+                  Admin Operations Panel
+                </span>
+                <span>→</span>
+              </button>
+
               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem' }}>
                 <button
                   onClick={() => {
@@ -427,6 +495,7 @@ export default function Navbar({
         @media (min-width: 900px) {
           .desktop-search { display: flex !important; }
           .desktop-nav { display: flex !important; }
+          .desktop-admin-btn { display: inline-flex !important; }
           .mobile-toggle { display: none !important; }
           #ask-vet-nav-btn { display: inline-flex !important; }
         }
