@@ -108,6 +108,8 @@ agrovet-ltd/
 │       ├── ReviewsSection.jsx     # Verified farmer reviews grid
 │       ├── FAQSection.jsx         # Accordion FAQ component
 │       ├── AskExpertCTA.jsx       # Veterinary consultation banner
+│       ├── AdminLockScreen.jsx    # Restricted staff authentication lock screen
+│       ├── AdminPanel.jsx         # Full-featured store owner & staff operations console
 │       └── Footer.jsx             # Legal notices, PCPB/KVB compliance & county destinations
 ```
 
@@ -131,7 +133,27 @@ Prescription veterinary antibiotics (e.g. *Penstrep-400*) and restricted class i
 
 ---
 
-## 🔌 6. Phase 2 Backend & M-Pesa Daraja Integration Plan
+## 🛡️ 6. Store Operations & Admin Operations Console
+
+Agrovet Ltd includes an internal operations command center for store managers, inventory supervisors, and veterinarians to manage daily transactions and clinical inflows:
+
+### A. Access & Security Authentication
+- **URL Route:** Accessible via `/admin` (or hash `/#/admin` / `/#admin`).
+- **Hidden Link Protection:** Public storefront navigation headers and footers contain no visible admin links to avoid unauthorized customer tampering.
+- **Lock Screen (`AdminLockScreen.jsx`):** Requires authorized staff credentials:
+  - **Staff Username:** `admin`
+  - **Security Password:** `agrovet.ltd`
+- **Session Security:** Authenticated state persists via secure `sessionStorage`. Single-click **"Lock Console"** immediately destroys active session tokens and returns to storefront.
+- **Deep-Linking & URL Tab Sync:** Supports direct tab linking via query parameter:
+  - `/admin?tab=analytics` — Real-time revenue, order status distribution, county heatmap & vet inflow metrics.
+  - `/admin?tab=inventory` — Full shop catalog manager (add, edit, toggle stock, manage pricing & delete).
+  - `/admin?tab=orders` — Sales order processing & fulfillment dispatcher.
+  - `/admin?tab=services` — Farm service bookings & clinical case logger.
+  - `/admin?tab=settings` — Default catalog restoration & system parameters.
+
+---
+
+## 🔌 7. Phase 2 Backend & M-Pesa Daraja Integration Plan
 
 When transitioning to Phase 2 with **Node.js/Express**, **PostgreSQL**, and **Safaricom Daraja API**, connect to the front end through the following integration points:
 
@@ -236,7 +258,7 @@ CREATE TABLE order_items (
 
 ---
 
-## 📱 7. Mobile-First Optimization for Rural & 3G Networks
+## 📱 8. Mobile-First Optimization for Rural & 3G Networks
 
 - **Lightweight Architecture:** No heavyweight CSS frameworks; pure modular CSS with native variables.
 - **Lazy Loading:** All catalog imagery configured with `loading="lazy"` and CSS aspect ratios to avoid Cumulative Layout Shift (CLS).
@@ -245,6 +267,6 @@ CREATE TABLE order_items (
 
 ---
 
-## 📜 8. License & Commercial Rights
+## 📜 9. License & Commercial Rights
 
 Developed for **Agrovet ltd, Nairobi, Kenya**. All rights reserved © 2026.

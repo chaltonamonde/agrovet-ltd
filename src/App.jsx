@@ -15,6 +15,7 @@ import LearnSection from './components/LearnSection';
 import AboutSection from './components/AboutSection';
 import ContactSection from './components/ContactSection';
 import AdminPanel from './components/AdminPanel';
+import AdminLockScreen from './components/AdminLockScreen';
 import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
 import CheckoutModal from './components/CheckoutModal';
@@ -27,11 +28,71 @@ import BackToTop from './components/BackToTop';
 import { PRODUCTS } from './data/products';
 import { INITIAL_ORDERS, INITIAL_SERVICE_BOOKINGS } from './data/adminData';
 
+const isUrlAdmin = () => {
+  if (typeof window === 'undefined') return false;
+  const path = window.location.pathname.toLowerCase();
+  const hash = window.location.hash.toLowerCase();
+  return path === '/admin' || path.startsWith('/admin/') || hash === '#/admin' || hash === '#admin';
+};
+
 export default function App() {
-  // Navigation & View State
-  const [activeView, setActiveView] = useState('home'); // 'home' | 'shop' | 'consultation' | 'learn' | 'about' | 'contact' | 'admin'
+  // Navigation & View State (defaults to 'admin' if URL is /admin)
+  const [activeView, setActiveView] = useState(() => isUrlAdmin() ? 'admin' : 'home');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+
+  // Admin Portal Authentication State (Required: admin / agrovet.ltd)
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
+    try {
+      return sessionStorage.getItem('agrovet_admin_auth') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+
+  // URL Synchronization with browser navigation (popstate & hashchange)
+  useEffect(() => {
+    const handleLocationSync = () => {
+      if (isUrlAdmin()) {
+        setActiveView('admin');
+      } else if (activeView === 'admin') {
+        setActiveView('home');
+      }
+    };
+
+    window.addEventListener('popstate', handleLocationSync);
+    window.addEventListener('hashchange', handleLocationSync);
+    return () => {
+      window.removeEventListener('popstate', handleLocationSync);
+      window.removeEventListener('hashchange', handleLocationSync);
+    };
+  }, [activeView]);
+
+  // Push /admin or / to history when view changes
+  useEffect(() => {
+    if (activeView === 'admin') {
+      if (!isUrlAdmin()) {
+        window.history.pushState({}, '', '/admin');
+      }
+    } else {
+      if (isUrlAdmin()) {
+        window.history.pushState({}, '', '/');
+      }
+    }
+  }, [activeView]);
+
+  const handleBackToStorefront = () => {
+    window.history.pushState({}, '', '/');
+    setActiveView('home');
+  };
+
+  const handleAdminLogout = () => {
+    try {
+      sessionStorage.removeItem('agrovet_admin_auth');
+    } catch (e) {}
+    setIsAdminAuthenticated(false);
+    handleBackToStorefront();
+  };
 
   // Dynamic Catalog State with LocalStorage Persistence (Edit the Whole Shop)
   const [products, setProducts] = useState(() => {
@@ -232,110 +293,128 @@ export default function App() {
       {/* Live Canvas Background: Drifting Gold Particles & Ambient Waves */}
       <AnimatedBackground />
 
-      {/* Primary Sticky Header */}
-      <Navbar 
-        cartCount={cartTotalCount}
-        onOpenCart={() => setIsCartOpen(true)}
-        activeView={activeView}
-        setActiveView={setActiveView}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        onOpenConsultation={() => setActiveView('consultation')}
-        onOpenWholesale={() => setIsWholesaleOpen(true)}
-        onOpenAccount={() => setIsAccountOpen(true)}
-        onSelectProduct={(p) => setSelectedProductModal(p)}
-      />
-
-      {/* Main Dynamic View Content */}
-      <div style={{ flex: 1, position: 'relative', zIndex: 1 }}>
-        {activeView === 'home' && (
-          <main>
-            <Hero 
-              onShopNow={() => setActiveView('shop')}
-              onConsultVet={() => setActiveView('consultation')}
-              onSearchSelect={handleSearchSelect}
+      {activeView === 'admin' ? (
+        <div style={{ flex: 1, position: 'relative', zIndex: 1, width: '100%', maxWidth: '100vw', overflowX: 'hidden' }}>
+          {!isAdminAuthenticated ? (
+            <AdminLockScreen 
+              onUnlock={() => setIsAdminAuthenticated(true)}
+              onBackToStorefront={handleBackToStorefront}
             />
-
-            <TrustBar />
-
-            <CategoryGrid 
-              onSelectCategory={handleCategorySelect}
-            />
-
-            <FeaturedProducts 
+          ) : (
+            <AdminPanel 
               products={products}
-              onAddToCart={handleAddToCart}
-              onOpenProductModal={(p) => setSelectedProductModal(p)}
-              onConsultProduct={handleConsultProduct}
-              onViewAll={() => setActiveView('shop')}
+              setProducts={setProducts}
+              orders={orders}
+              setOrders={setOrders}
+              services={services}
+              setServices={setServices}
+              onBackToShop={handleBackToStorefront}
+              onResetDefaultProducts={handleResetDefaultProducts}
+              onLock={handleAdminLogout}
             />
-
-            <AskExpertCTA 
-              onOpenConsultation={() => setActiveView('consultation')}
-            />
-
-            <HowItWorks 
-              onShopNow={() => setActiveView('shop')}
-            />
-
-            <ReviewsSection />
-
-            <FAQSection />
-          </main>
-        )}
-
-        {activeView === 'shop' && (
-          <ShopView 
-            products={products}
-            selectedCategory={selectedCategory}
-            setSelectedCategory={setSelectedCategory}
+          )}
+        </div>
+      ) : (
+        <>
+          {/* Primary Sticky Header */}
+          <Navbar 
+            cartCount={cartTotalCount}
+            onOpenCart={() => setIsCartOpen(true)}
+            activeView={activeView}
+            setActiveView={setActiveView}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
-            onAddToCart={handleAddToCart}
-            onOpenProductModal={(p) => setSelectedProductModal(p)}
-            onConsultProduct={handleConsultProduct}
-          />
-        )}
-
-        {activeView === 'consultation' && (
-          <ConsultationSection />
-        )}
-
-        {activeView === 'learn' && (
-          <LearnSection 
+            onOpenConsultation={() => setActiveView('consultation')}
+            onOpenWholesale={() => setIsWholesaleOpen(true)}
+            onOpenAccount={() => setIsAccountOpen(true)}
             onSelectProduct={(p) => setSelectedProductModal(p)}
           />
-        )}
 
-        {activeView === 'about' && (
-          <AboutSection />
-        )}
+          {/* Main Dynamic View Content */}
+          <div style={{ flex: 1, position: 'relative', zIndex: 1, width: '100%', maxWidth: '100vw', overflowX: 'hidden' }}>
+            {activeView === 'home' && (
+              <main>
+                <Hero 
+                  onShopNow={() => setActiveView('shop')}
+                  onConsultVet={() => setActiveView('consultation')}
+                  onSearchSelect={handleSearchSelect}
+                />
 
-        {activeView === 'contact' && (
-          <ContactSection />
-        )}
+                <TrustBar />
 
-        {activeView === 'admin' && (
-          <AdminPanel 
-            products={products}
-            setProducts={setProducts}
-            orders={orders}
-            setOrders={setOrders}
-            services={services}
-            setServices={setServices}
-            onBackToShop={() => setActiveView('shop')}
-            onResetDefaultProducts={handleResetDefaultProducts}
+                <CategoryGrid 
+                  onSelectCategory={handleCategorySelect}
+                />
+
+                <FeaturedProducts 
+                  products={products}
+                  onAddToCart={handleAddToCart}
+                  onOpenProductModal={(p) => setSelectedProductModal(p)}
+                  onConsultProduct={handleConsultProduct}
+                  onViewAll={() => setActiveView('shop')}
+                />
+
+                <AskExpertCTA 
+                  onOpenConsultation={() => setActiveView('consultation')}
+                />
+
+                <HowItWorks 
+                  onShopNow={() => setActiveView('shop')}
+                />
+
+                <ReviewsSection />
+
+                <FAQSection />
+              </main>
+            )}
+
+            {activeView === 'shop' && (
+              <ShopView 
+                products={products}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                onAddToCart={handleAddToCart}
+                onOpenProductModal={(p) => setSelectedProductModal(p)}
+                onConsultProduct={handleConsultProduct}
+              />
+            )}
+
+            {activeView === 'consultation' && (
+              <ConsultationSection />
+            )}
+
+            {activeView === 'learn' && (
+              <LearnSection 
+                onSelectProduct={(p) => setSelectedProductModal(p)}
+              />
+            )}
+
+            {activeView === 'about' && (
+              <AboutSection />
+            )}
+
+            {activeView === 'contact' && (
+              <ContactSection />
+            )}
+          </div>
+
+          {/* Global Footer (shown on storefront views) */}
+          <Footer 
+            setActiveView={setActiveView}
+            onOpenWholesale={() => setIsWholesaleOpen(true)}
+            onOpenConsultation={() => setActiveView('consultation')}
           />
-        )}
-      </div>
 
-      {/* Global Footer (shown on storefront views) */}
-      {activeView !== 'admin' && (
-        <Footer 
-          setActiveView={setActiveView}
-          onOpenWholesale={() => setIsWholesaleOpen(true)}
-          onOpenConsultation={() => setActiveView('consultation')}
-        />
+          {/* Floating Sticky 24/7 WhatsApp Vet Widget */}
+          <StickyWhatsApp 
+            onOpenConsultation={() => setActiveView('consultation')}
+          />
+
+          {/* Floating Back to Top Button */}
+          <BackToTop />
+        </>
       )}
 
       {/* Slide-out Cart Drawer */}
@@ -376,7 +455,6 @@ export default function App() {
       <AccountModal 
         isOpen={isAccountOpen}
         onClose={() => setIsAccountOpen(false)}
-        onOpenAdmin={() => setActiveView('admin')}
         onReorder={(order) => {
           showToast('Previous order items loaded to cart!');
           setIsCartOpen(true);
@@ -388,14 +466,6 @@ export default function App() {
         isOpen={isDiscountModalOpen}
         onClose={() => setIsDiscountModalOpen(false)}
       />
-
-      {/* Floating Sticky 24/7 WhatsApp Vet Widget */}
-      <StickyWhatsApp 
-        onOpenConsultation={() => setActiveView('consultation')}
-      />
-
-      {/* Floating Back to Top Button */}
-      <BackToTop />
 
       {/* Toast Notification Box */}
       {toastMessage && (

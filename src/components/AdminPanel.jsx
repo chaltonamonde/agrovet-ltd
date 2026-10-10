@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   BarChart3,
   TrendingUp,
@@ -36,7 +36,8 @@ import {
   Sliders,
   Calendar,
   Layers,
-  MapPin
+  MapPin,
+  Lock
 } from 'lucide-react';
 import { 
   INITIAL_ORDERS, 
@@ -56,10 +57,33 @@ export default function AdminPanel({
   services,
   setServices,
   onBackToShop,
-  onResetDefaultProducts
+  onResetDefaultProducts,
+  onLock
 }) {
+  // Tab alias map: URL aliases → internal tab IDs
+  const TAB_ALIAS = { catalog: 'inventory', shop: 'inventory', analytics: 'analytics', inventory: 'inventory', orders: 'orders', services: 'services', settings: 'settings' };
+
+  // Read tab from URL ?tab= on initial render
+  const getInitialTab = () => {
+    try {
+      const param = new URLSearchParams(window.location.search).get('tab');
+      if (param && TAB_ALIAS[param]) return TAB_ALIAS[param];
+    } catch (e) {}
+    return 'analytics';
+  };
+
   // Navigation Tabs: 'analytics' | 'inventory' | 'orders' | 'services' | 'settings'
-  const [activeTab, setActiveTab] = useState('analytics');
+  const [activeTab, setActiveTab] = useState(getInitialTab);
+
+  // Sync URL ?tab= when tab changes
+  const handleTabChange = useCallback((tabId) => {
+    setActiveTab(tabId);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', tabId);
+      window.history.replaceState({}, '', url.toString());
+    } catch (e) {}
+  }, []);
 
   // Sub-filter for Analytics tab: 'all' | 'services' | 'categories' | 'trends'
   const [analyticsSubTab, setAnalyticsSubTab] = useState('all');
@@ -243,154 +267,188 @@ export default function AdminPanel({
     <div className="admin-container" style={{
       backgroundColor: '#030814',
       minHeight: '100vh',
+      width: '100%',
+      maxWidth: '100vw',
+      overflowX: 'hidden',
       color: '#FFFFFF',
       fontFamily: 'var(--font-sans)',
       paddingBottom: '5rem',
-      position: 'relative'
+      position: 'relative',
+      boxSizing: 'border-box'
     }}>
       {/* ==================================================== */}
-      {/* ADMIN HEADER BANNER */}
+      {/* ADMIN HEADER BANNER (RESPONSIVE) */}
       {/* ==================================================== */}
       <div style={{
         backgroundColor: '#061129',
         borderBottom: '1.5px solid rgba(30, 107, 255, 0.35)',
-        padding: '1.25rem 0',
+        padding: '0.85rem 0',
         position: 'sticky',
         top: 0,
         zIndex: 90,
-        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.7)'
+        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.7)',
+        width: '100%',
+        maxWidth: '100vw',
+        boxSizing: 'border-box'
       }}>
         <div className="container" style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '1rem'
+          gap: '0.75rem',
+          padding: '0 0.85rem'
         }}>
           {/* Brand & Mode Indicator */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', maxWidth: '100%' }}>
             <div style={{
-              width: '46px',
-              height: '46px',
-              borderRadius: '12px',
+              width: '40px',
+              height: '40px',
+              minWidth: '40px',
+              borderRadius: '10px',
               background: 'linear-gradient(135deg, #1E6BFF 0%, #0A1E46 100%)',
               border: '1.5px solid #F5C542',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 0 20px rgba(245, 197, 66, 0.4)'
+              boxShadow: '0 0 16px rgba(245, 197, 66, 0.35)'
             }}>
-              <ShieldCheck size={26} color="#F5C542" />
+              <ShieldCheck size={22} color="#F5C542" />
             </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+            <div style={{ minWidth: 0, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <h1 style={{
-                  fontSize: '1.35rem',
+                  fontSize: 'clamp(1rem, 3.5vw, 1.25rem)',
                   fontWeight: 800,
                   color: '#FFFFFF',
                   margin: 0,
-                  letterSpacing: '-0.02em'
+                  letterSpacing: '-0.02em',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
                 }}>
-                  Agrovet Ltd Operations Command Center
+                  Agrovet Ltd Operations Command
                 </h1>
                 <span style={{
                   backgroundColor: 'rgba(16, 185, 129, 0.15)',
                   border: '1px solid #10B981',
                   color: '#10B981',
-                  fontSize: '0.72rem',
+                  fontSize: '0.68rem',
                   fontWeight: 700,
-                  padding: '0.2rem 0.55rem',
+                  padding: '0.15rem 0.45rem',
                   borderRadius: '9999px',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '0.3rem'
+                  gap: '0.25rem'
                 }}>
-                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10B981', display: 'inline-block' }} />
-                  Live System Active
+                  <span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#10B981', display: 'inline-block' }} />
+                  Live Sync
                 </span>
               </div>
-              <div style={{ fontSize: '0.785rem', color: '#94A3B8', marginTop: '0.2rem' }}>
-                KVB Reg. #2104 • PCPB Lic. #AGV-2026 • Real-Time Catalog & Sales Synchronization
+              <div style={{ fontSize: '0.72rem', color: '#94A3B8', marginTop: '0.15rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                KVB #2104 • PCPB #AGV-2026 • Secure Staff Console
               </div>
             </div>
           </div>
 
           {/* Quick Header Actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
             <button
               onClick={handleExportData}
               className="btn btn-sm btn-outline"
               style={{
                 borderColor: 'rgba(255, 255, 255, 0.18)',
                 color: '#CBD5E1',
-                gap: '0.4rem',
-                fontSize: '0.8rem'
+                gap: '0.35rem',
+                fontSize: '0.75rem',
+                padding: '0.4rem 0.65rem'
               }}
               title="Download backup JSON"
             >
-              <Download size={14} />
-              <span>Export JSON</span>
+              <Download size={13} />
+              <span>Export</span>
+            </button>
+
+            {/* Lock Console Button */}
+            <button
+              onClick={onLock}
+              className="btn btn-sm btn-outline"
+              style={{
+                borderColor: 'rgba(239, 68, 68, 0.4)',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                color: '#EF4444',
+                gap: '0.35rem',
+                fontSize: '0.75rem',
+                padding: '0.4rem 0.65rem',
+                fontWeight: 700
+              }}
+              title="Lock Console & Log Out"
+            >
+              <Lock size={13} />
+              <span>Lock</span>
             </button>
 
             <button
               onClick={onBackToShop}
               className="btn btn-sm btn-primary"
               style={{
-                padding: '0.6rem 1.25rem',
-                fontSize: '0.85rem',
+                padding: '0.45rem 0.85rem',
+                fontSize: '0.785rem',
                 fontWeight: 700,
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '0.5rem',
-                boxShadow: '0 4px 15px rgba(245, 197, 66, 0.3)'
+                gap: '0.4rem'
               }}
             >
-              <ArrowLeft size={16} />
-              <span>Back to Storefront</span>
+              <ArrowLeft size={14} />
+              <span>Storefront</span>
             </button>
           </div>
         </div>
 
-        {/* Tab Navigation Row */}
-        <div className="container" style={{ marginTop: '1.25rem' }}>
+        {/* Tab Navigation Row with smooth touch scrolling */}
+        <div className="container" style={{ marginTop: '0.85rem', padding: '0 0.85rem' }}>
           <div style={{
             display: 'flex',
-            gap: '0.5rem',
+            gap: '0.4rem',
             overflowX: 'auto',
-            paddingBottom: '0.25rem',
-            scrollbarWidth: 'none'
+            WebkitOverflowScrolling: 'touch',
+            paddingBottom: '0.35rem',
+            scrollbarWidth: 'none',
+            width: '100%',
+            boxSizing: 'border-box'
           }}>
             {[
-              { id: 'analytics', label: '📊 Analytics & Inflows', desc: 'Category & Service Charts' },
-              { id: 'inventory', label: `📦 Shop Inventory (${products.length})`, desc: 'Edit Products & Stock' },
-              { id: 'orders', label: `🛒 Orders & Sales (${orders.length})`, desc: 'Manage Inflows & Delivery' },
-              { id: 'services', label: `🩺 Consultations & Bookings (${services.length})`, desc: 'Vet & Agronomy Requests' },
-              { id: 'settings', label: '⚙️ Settings & Tools', desc: 'Rates, PCPB & Backup' }
+              { id: 'analytics', label: '📊 Inflows & Charts', desc: 'Revenue Analysis' },
+              { id: 'inventory', label: `📦 Shop Catalog (${products.length})`, desc: 'Edit All Products' },
+              { id: 'orders', label: `🛒 Orders (${orders.length})`, desc: 'Sales & Delivery' },
+              { id: 'services', label: `🩺 Bookings (${services.length})`, desc: 'Vet & Agronomy' },
+              { id: 'settings', label: '⚙️ Settings', desc: 'Rates & Reset' }
             ].map(tab => {
               const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabChange(tab.id)}
                   style={{
-                    backgroundColor: isActive ? '#1E6BFF' : 'rgba(10, 23, 51, 0.7)',
+                    backgroundColor: isActive ? '#1E6BFF' : 'rgba(10, 23, 51, 0.8)',
                     border: isActive ? '1.5px solid #F5C542' : '1px solid rgba(255, 255, 255, 0.08)',
                     color: isActive ? '#FFFFFF' : '#94A3B8',
-                    padding: '0.65rem 1.1rem',
-                    borderRadius: '10px',
+                    padding: '0.5rem 0.85rem',
+                    borderRadius: '8px',
                     cursor: 'pointer',
                     fontWeight: 700,
-                    fontSize: '0.875rem',
+                    fontSize: '0.8rem',
                     whiteSpace: 'nowrap',
-                    transition: 'all 0.2s ease',
+                    flexShrink: 0,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'flex-start',
-                    boxShadow: isActive ? '0 6px 20px rgba(30, 107, 255, 0.4)' : 'none'
+                    boxShadow: isActive ? '0 4px 15px rgba(30, 107, 255, 0.4)' : 'none'
                   }}
                 >
                   <span style={{ color: isActive ? '#FFFFFF' : '#E2E8F0' }}>{tab.label}</span>
-                  <span style={{ fontSize: '0.68rem', color: isActive ? '#F5C542' : '#64748B', fontWeight: 500 }}>
+                  <span style={{ fontSize: '0.65rem', color: isActive ? '#F5C542' : '#64748B', fontWeight: 500 }}>
                     {tab.desc}
                   </span>
                 </button>
@@ -403,51 +461,51 @@ export default function AdminPanel({
       {/* ==================================================== */}
       {/* MAIN ADMIN CONTENT BODY */}
       {/* ==================================================== */}
-      <div className="container" style={{ marginTop: '2rem' }}>
+      <div className="container" style={{ marginTop: '1.25rem', padding: '0 0.85rem' }}>
 
         {/* -------------------------------------------------- */}
         {/* TAB 1: CHARTS & ANALYTICS (INFLOWS & CATEGORIES) */}
         {/* -------------------------------------------------- */}
         {activeTab === 'analytics' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%', maxWidth: '100%' }}>
             
-            {/* Top Row: Executive Metric Cards */}
+            {/* Top Row: Executive Metric Cards (Responsive Grid) */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-              gap: '1.25rem'
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 150px), 1fr))',
+              gap: '0.75rem',
+              width: '100%'
             }}>
               {/* Card 1: Gross Inflow */}
               <div className="card-glass" style={{
                 backgroundColor: '#0A1733',
                 border: '1.5px solid rgba(245, 197, 66, 0.35)',
-                borderRadius: '16px',
-                padding: '1.35rem',
-                position: 'relative',
-                overflow: 'hidden'
+                borderRadius: '14px',
+                padding: '1rem',
+                boxSizing: 'border-box'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: '0.8rem', color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase' }}>
-                    Total Gross Inflow (MTD)
+                  <span style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase' }}>
+                    Gross Inflow (MTD)
                   </span>
                   <div style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '10px',
+                    width: '30px',
+                    height: '30px',
+                    borderRadius: '8px',
                     backgroundColor: 'rgba(245, 197, 66, 0.15)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}>
-                    <DollarSign size={20} color="#F5C542" />
+                    <DollarSign size={16} color="#F5C542" />
                   </div>
                 </div>
-                <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#FFFFFF', marginTop: '0.5rem', fontFamily: 'var(--font-display)' }}>
+                <div style={{ fontSize: 'clamp(1.2rem, 4.5vw, 1.7rem)', fontWeight: 800, color: '#FFFFFF', marginTop: '0.35rem', fontFamily: 'var(--font-display)', wordBreak: 'break-word' }}>
                   KES {combinedGrossInflow.toLocaleString()}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem', fontSize: '0.785rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.35rem', fontSize: '0.72rem' }}>
                   <span style={{ color: '#10B981', fontWeight: 700 }}>+22.4%</span>
-                  <span style={{ color: '#64748B' }}>vs previous 30 days</span>
+                  <span style={{ color: '#64748B' }}>vs last month</span>
                 </div>
               </div>
 
@@ -455,33 +513,34 @@ export default function AdminPanel({
               <div className="card-glass" style={{
                 backgroundColor: '#0A1733',
                 border: '1.5px solid rgba(30, 107, 255, 0.35)',
-                borderRadius: '16px',
-                padding: '1.35rem'
+                borderRadius: '14px',
+                padding: '1rem',
+                boxSizing: 'border-box'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: '0.8rem', color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase' }}>
-                    Shop Products Revenue
+                  <span style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase' }}>
+                    Products Sales
                   </span>
                   <div style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '10px',
+                    width: '30px',
+                    height: '30px',
+                    borderRadius: '8px',
                     backgroundColor: 'rgba(30, 107, 255, 0.15)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}>
-                    <ShoppingBag size={20} color="#60A5FA" />
+                    <ShoppingBag size={16} color="#60A5FA" />
                   </div>
                 </div>
-                <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#60A5FA', marginTop: '0.5rem', fontFamily: 'var(--font-display)' }}>
+                <div style={{ fontSize: 'clamp(1.2rem, 4.5vw, 1.7rem)', fontWeight: 800, color: '#60A5FA', marginTop: '0.35rem', fontFamily: 'var(--font-display)', wordBreak: 'break-word' }}>
                   KES {totalShopSales.toLocaleString()}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem', fontSize: '0.785rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.35rem', fontSize: '0.72rem' }}>
                   <span style={{ color: '#F5C542', fontWeight: 700 }}>
                     {((totalShopSales / combinedGrossInflow) * 100).toFixed(1)}%
                   </span>
-                  <span style={{ color: '#64748B' }}>of all incoming business</span>
+                  <span style={{ color: '#64748B' }}>of all business</span>
                 </div>
               </div>
 
@@ -489,33 +548,34 @@ export default function AdminPanel({
               <div className="card-glass" style={{
                 backgroundColor: '#0A1733',
                 border: '1.5px solid rgba(16, 185, 129, 0.35)',
-                borderRadius: '16px',
-                padding: '1.35rem'
+                borderRadius: '14px',
+                padding: '1rem',
+                boxSizing: 'border-box'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: '0.8rem', color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase' }}>
-                    Services & Consultations
+                  <span style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase' }}>
+                    Services Inflow
                   </span>
                   <div style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '10px',
+                    width: '30px',
+                    height: '30px',
+                    borderRadius: '8px',
                     backgroundColor: 'rgba(16, 185, 129, 0.15)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}>
-                    <Stethoscope size={20} color="#10B981" />
+                    <Stethoscope size={16} color="#10B981" />
                   </div>
                 </div>
-                <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#10B981', marginTop: '0.5rem', fontFamily: 'var(--font-display)' }}>
+                <div style={{ fontSize: 'clamp(1.2rem, 4.5vw, 1.7rem)', fontWeight: 800, color: '#10B981', marginTop: '0.35rem', fontFamily: 'var(--font-display)', wordBreak: 'break-word' }}>
                   KES {totalServicesInflow.toLocaleString()}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem', fontSize: '0.785rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.35rem', fontSize: '0.72rem' }}>
                   <span style={{ color: '#10B981', fontWeight: 700 }}>
                     {((totalServicesInflow / combinedGrossInflow) * 100).toFixed(1)}%
                   </span>
-                  <span style={{ color: '#64748B' }}>veterinary & agronomy fees</span>
+                  <span style={{ color: '#64748B' }}>vet & agronomy</span>
                 </div>
               </div>
 
@@ -523,47 +583,51 @@ export default function AdminPanel({
               <div className="card-glass" style={{
                 backgroundColor: '#0A1733',
                 border: lowStockCount > 0 ? '1.5px solid rgba(239, 68, 68, 0.45)' : '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '16px',
-                padding: '1.35rem'
+                borderRadius: '14px',
+                padding: '1rem',
+                boxSizing: 'border-box'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: '0.8rem', color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase' }}>
-                    Orders & Inventory Health
+                  <span style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase' }}>
+                    Inventory Health
                   </span>
                   <div style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '10px',
+                    width: '30px',
+                    height: '30px',
+                    borderRadius: '8px',
                     backgroundColor: lowStockCount > 0 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(30, 107, 255, 0.15)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}>
-                    <Package size={20} color={lowStockCount > 0 ? '#EF4444' : '#60A5FA'} />
+                    <Package size={16} color={lowStockCount > 0 ? '#EF4444' : '#60A5FA'} />
                   </div>
                 </div>
-                <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#FFFFFF', marginTop: '0.5rem', fontFamily: 'var(--font-display)' }}>
-                  {orders.length} <span style={{ fontSize: '0.9rem', color: '#94A3B8', fontWeight: 500 }}>Active Orders</span>
+                <div style={{ fontSize: 'clamp(1.2rem, 4.5vw, 1.7rem)', fontWeight: 800, color: '#FFFFFF', marginTop: '0.35rem', fontFamily: 'var(--font-display)' }}>
+                  {orders.length} <span style={{ fontSize: '0.785rem', color: '#94A3B8', fontWeight: 500 }}>Orders</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem', fontSize: '0.785rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.35rem', fontSize: '0.72rem' }}>
                   {lowStockCount > 0 ? (
-                    <span style={{ color: '#EF4444', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                      <AlertTriangle size={13} /> {lowStockCount} Products Need Restock
+                    <span style={{ color: '#EF4444', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      <AlertTriangle size={12} /> {lowStockCount} Need Restock
                     </span>
                   ) : (
-                    <span style={{ color: '#10B981', fontWeight: 600 }}>All Catalog SKUs Healthy</span>
+                    <span style={{ color: '#10B981', fontWeight: 600 }}>All SKUs Healthy</span>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Sub-navigation for Analytics views */}
+            {/* Sub-navigation for Analytics views (Horizontal scroll on phone) */}
             <div style={{
               display: 'flex',
-              gap: '0.5rem',
+              gap: '0.4rem',
+              overflowX: 'auto',
+              WebkitOverflowScrolling: 'touch',
               borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-              paddingBottom: '0.75rem',
-              flexWrap: 'wrap'
+              paddingBottom: '0.5rem',
+              scrollbarWidth: 'none',
+              width: '100%'
             }}>
               {[
                 { id: 'all', label: 'All Analysis Views' },
@@ -578,11 +642,13 @@ export default function AdminPanel({
                     backgroundColor: analyticsSubTab === sub.id ? 'rgba(245, 197, 66, 0.15)' : 'transparent',
                     border: analyticsSubTab === sub.id ? '1px solid #F5C542' : '1px solid rgba(255, 255, 255, 0.08)',
                     color: analyticsSubTab === sub.id ? '#F5C542' : '#94A3B8',
-                    padding: '0.45rem 0.9rem',
-                    borderRadius: '8px',
-                    fontSize: '0.825rem',
+                    padding: '0.4rem 0.75rem',
+                    borderRadius: '6px',
+                    fontSize: '0.78rem',
                     fontWeight: 600,
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0
                   }}
                 >
                   {sub.label}
@@ -597,39 +663,41 @@ export default function AdminPanel({
               <div className="card-glass" style={{
                 backgroundColor: '#071226',
                 border: '1px solid rgba(30, 107, 255, 0.35)',
-                borderRadius: '20px',
-                padding: '1.75rem'
+                borderRadius: '16px',
+                padding: 'clamp(1rem, 3.5vw, 1.5rem)',
+                boxSizing: 'border-box',
+                width: '100%'
               }}>
                 <div style={{
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'flex-start',
                   flexWrap: 'wrap',
-                  gap: '1rem',
-                  marginBottom: '1.5rem'
+                  gap: '0.75rem',
+                  marginBottom: '1.25rem'
                 }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontSize: '1.35rem' }}>🩺</span>
-                      <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
+                  <div style={{ maxWidth: '100%' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <span style={{ fontSize: '1.25rem' }}>🩺</span>
+                      <h2 style={{ fontSize: 'clamp(1.1rem, 3.5vw, 1.3rem)', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
                         Revenue Inflows By Service
                       </h2>
                     </div>
-                    <p style={{ fontSize: '0.85rem', color: '#94A3B8', margin: '0.35rem 0 0 0' }}>
-                      Detailed audit of all income generated across clinical vet visits, tele-triage, agronomy scouting, wholesale, and express logistics.
+                    <p style={{ fontSize: '0.785rem', color: '#94A3B8', margin: '0.25rem 0 0 0' }}>
+                      Audit of income generated across clinical vet visits, telehealth, agronomy audits, and logistics.
                     </p>
                   </div>
                   <div style={{
                     backgroundColor: 'rgba(30, 107, 255, 0.15)',
                     border: '1px solid rgba(30, 107, 255, 0.4)',
-                    padding: '0.5rem 1rem',
-                    borderRadius: '10px',
+                    padding: '0.4rem 0.75rem',
+                    borderRadius: '8px',
                     textAlign: 'right'
                   }}>
-                    <span style={{ fontSize: '0.72rem', color: '#60A5FA', textTransform: 'uppercase', display: 'block', fontWeight: 700 }}>
-                      Total Service Inflow
+                    <span style={{ fontSize: '0.68rem', color: '#60A5FA', textTransform: 'uppercase', display: 'block', fontWeight: 700 }}>
+                      Services Total
                     </span>
-                    <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#F5C542', fontFamily: 'var(--font-display)' }}>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#F5C542', fontFamily: 'var(--font-display)' }}>
                       KES {totalServicesInflow.toLocaleString()}
                     </span>
                   </div>
@@ -639,28 +707,30 @@ export default function AdminPanel({
                 <div style={{
                   backgroundColor: '#040B1A',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '14px',
-                  padding: '1.25rem',
-                  marginBottom: '1.75rem'
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  marginBottom: '1.25rem',
+                  width: '100%',
+                  boxSizing: 'border-box'
                 }}>
-                  <div style={{ fontSize: '0.8rem', color: '#CBD5E1', fontWeight: 700, marginBottom: '1rem', display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Comparative Inflow Volume (KES)</span>
-                    <span style={{ color: '#60A5FA', fontSize: '0.75rem' }}>Hover or tap bars for details</span>
+                  <div style={{ fontSize: '0.78rem', color: '#CBD5E1', fontWeight: 700, marginBottom: '0.85rem', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Comparative Volume (KES)</span>
+                    <span style={{ color: '#60A5FA', fontSize: '0.7rem' }}>Ranked by revenue</span>
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    {SERVICE_INFLOW_DATA.map((srv, idx) => {
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                    {SERVICE_INFLOW_DATA.map((srv) => {
                       const maxVal = Math.max(...SERVICE_INFLOW_DATA.map(s => s.inflowAmount));
                       const barPercent = (srv.inflowAmount / maxVal) * 100;
                       return (
-                        <div key={srv.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.825rem' }}>
-                            <span style={{ fontWeight: 600, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: srv.accentColor }} />
-                              {srv.title}
+                        <div key={srv.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', width: '100%' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem', flexWrap: 'wrap', gap: '0.25rem' }}>
+                            <span style={{ fontWeight: 600, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: '0.35rem', minWidth: '160px' }}>
+                              <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: srv.accentColor, flexShrink: 0 }} />
+                              <span style={{ overflowWrap: 'anywhere' }}>{srv.title}</span>
                             </span>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                              <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>{srv.bookingsCount} bookings</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginLeft: 'auto' }}>
+                              <span style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{srv.bookingsCount} jobs</span>
                               <span style={{ fontWeight: 800, color: '#F5C542', fontFamily: 'var(--font-display)' }}>
                                 KES {srv.inflowAmount.toLocaleString()}
                               </span>
@@ -669,19 +739,16 @@ export default function AdminPanel({
                           {/* Animated Progress Bar */}
                           <div style={{
                             width: '100%',
-                            height: '14px',
+                            height: '12px',
                             backgroundColor: 'rgba(255, 255, 255, 0.05)',
                             borderRadius: '9999px',
-                            overflow: 'hidden',
-                            position: 'relative'
+                            overflow: 'hidden'
                           }}>
                             <div style={{
                               width: `${barPercent}%`,
                               height: '100%',
                               background: `linear-gradient(90deg, ${srv.accentColor} 0%, #F5C542 100%)`,
-                              borderRadius: '9999px',
-                              transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
-                              boxShadow: `0 0 10px ${srv.accentColor}55`
+                              borderRadius: '9999px'
                             }} />
                           </div>
                         </div>
@@ -693,62 +760,63 @@ export default function AdminPanel({
                 {/* Grid of All 6 Service Cards with Inflow Metrics */}
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                  gap: '1.25rem'
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))',
+                  gap: '0.85rem',
+                  width: '100%'
                 }}>
                   {SERVICE_INFLOW_DATA.map(service => (
                     <div key={service.id} style={{
                       backgroundColor: '#09152E',
                       border: `1px solid ${service.accentColor}44`,
-                      borderRadius: '14px',
-                      padding: '1.25rem',
+                      borderRadius: '12px',
+                      padding: '1rem',
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'space-between',
-                      transition: 'transform 0.2s ease, border-color 0.2s ease'
+                      boxSizing: 'border-box'
                     }}>
                       <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                           <span style={{
                             backgroundColor: `${service.accentColor}22`,
                             color: service.accentColor,
                             border: `1px solid ${service.accentColor}55`,
-                            fontSize: '0.72rem',
+                            fontSize: '0.68rem',
                             fontWeight: 700,
-                            padding: '0.2rem 0.6rem',
+                            padding: '0.15rem 0.5rem',
                             borderRadius: '9999px'
                           }}>
-                            {service.growthRate} MoM Growth
+                            {service.growthRate} MoM
                           </span>
-                          <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                          <span style={{ fontSize: '0.7rem', color: '#64748B' }}>
                             Avg: KES {service.avgTicket.toLocaleString()}
                           </span>
                         </div>
-                        <h4 style={{ fontSize: '0.985rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '0.35rem', lineHeight: 1.3 }}>
+                        <h4 style={{ fontSize: '0.925rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '0.35rem', lineHeight: 1.3 }}>
                           {service.title}
                         </h4>
-                        <p style={{ fontSize: '0.785rem', color: '#94A3B8', marginBottom: '0.75rem', lineHeight: 1.4 }}>
+                        <p style={{ fontSize: '0.75rem', color: '#94A3B8', marginBottom: '0.65rem', lineHeight: 1.4 }}>
                           {service.description}
                         </p>
                       </div>
 
                       <div style={{
                         borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-                        paddingTop: '0.75rem',
-                        marginTop: '0.5rem',
+                        paddingTop: '0.65rem',
+                        marginTop: '0.35rem',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center'
                       }}>
                         <div>
-                          <div style={{ fontSize: '0.68rem', color: '#64748B', textTransform: 'uppercase' }}>Inflow Share</div>
-                          <div style={{ fontSize: '0.85rem', color: '#60A5FA', fontWeight: 600 }}>
+                          <div style={{ fontSize: '0.65rem', color: '#64748B', textTransform: 'uppercase' }}>Inflow Share</div>
+                          <div style={{ fontSize: '0.785rem', color: '#60A5FA', fontWeight: 600 }}>
                             {((service.inflowAmount / totalServicesInflow) * 100).toFixed(1)}% of Services
                           </div>
                         </div>
                         <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: '0.68rem', color: '#64748B', textTransform: 'uppercase' }}>Total Inflow</div>
-                          <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#F5C542', fontFamily: 'var(--font-display)' }}>
+                          <div style={{ fontSize: '0.65rem', color: '#64748B', textTransform: 'uppercase' }}>Total Inflow</div>
+                          <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#F5C542', fontFamily: 'var(--font-display)' }}>
                             KES {service.inflowAmount.toLocaleString()}
                           </div>
                         </div>
@@ -766,68 +834,72 @@ export default function AdminPanel({
               <div className="card-glass" style={{
                 backgroundColor: '#071226',
                 border: '1px solid rgba(245, 197, 66, 0.35)',
-                borderRadius: '20px',
-                padding: '1.75rem'
+                borderRadius: '16px',
+                padding: 'clamp(1rem, 3.5vw, 1.5rem)',
+                boxSizing: 'border-box',
+                width: '100%'
               }}>
                 <div style={{
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'flex-start',
                   flexWrap: 'wrap',
-                  gap: '1rem',
-                  marginBottom: '1.5rem'
+                  gap: '0.75rem',
+                  marginBottom: '1.25rem'
                 }}>
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontSize: '1.35rem' }}>📊</span>
-                      <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
-                        Category Inflows & Inventory Analysis
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <span style={{ fontSize: '1.25rem' }}>📊</span>
+                      <h2 style={{ fontSize: 'clamp(1.1rem, 3.5vw, 1.3rem)', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
+                        Category Inflows & Analysis
                       </h2>
                     </div>
-                    <p style={{ fontSize: '0.85rem', color: '#94A3B8', margin: '0.35rem 0 0 0' }}>
-                      In-depth breakdown across Veterinary Drugs, Animal Feeds, Crop Protection, Fertilizers, Seeds, and Farm Tools.
+                    <p style={{ fontSize: '0.785rem', color: '#94A3B8', margin: '0.25rem 0 0 0' }}>
+                      Breakdown across Vet Drugs, Animal Feeds, Crop Protection, Fertilizers, Seeds, and Tools.
                     </p>
                   </div>
                   <div style={{
                     backgroundColor: 'rgba(245, 197, 66, 0.1)',
                     border: '1px solid rgba(245, 197, 66, 0.35)',
-                    padding: '0.5rem 1rem',
-                    borderRadius: '10px',
+                    padding: '0.4rem 0.75rem',
+                    borderRadius: '8px',
                     textAlign: 'right'
                   }}>
-                    <span style={{ fontSize: '0.72rem', color: '#F5C542', textTransform: 'uppercase', display: 'block', fontWeight: 700 }}>
-                      Products Gross Revenue
+                    <span style={{ fontSize: '0.68rem', color: '#F5C542', textTransform: 'uppercase', display: 'block', fontWeight: 700 }}>
+                      Products Revenue
                     </span>
-                    <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFFFFF', fontFamily: 'var(--font-display)' }}>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FFFFFF', fontFamily: 'var(--font-display)' }}>
                       KES {CATEGORY_PERFORMANCE_DATA.reduce((a, c) => a + c.grossRevenue, 0).toLocaleString()}
                     </span>
                   </div>
                 </div>
 
-                {/* SVG Visual Horizontal Bars + Donut Breakdown */}
+                {/* SVG Visual Horizontal Bars + Donut Breakdown (Responsive Stack on Mobile) */}
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-                  gap: '1.5rem',
-                  marginBottom: '1.75rem'
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
+                  gap: '1rem',
+                  marginBottom: '1.25rem',
+                  width: '100%'
                 }}>
-                  {/* Left: Interactive Category Revenue Distribution Bars */}
+                  {/* Left: Category Revenue Distribution Bars */}
                   <div style={{
                     backgroundColor: '#040B1A',
                     border: '1px solid rgba(255, 255, 255, 0.08)',
-                    borderRadius: '14px',
-                    padding: '1.25rem'
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    boxSizing: 'border-box'
                   }}>
-                    <div style={{ fontSize: '0.85rem', color: '#FFFFFF', fontWeight: 700, marginBottom: '1rem' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#FFFFFF', fontWeight: 700, marginBottom: '0.75rem' }}>
                       Revenue Generated by Category
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                       {CATEGORY_PERFORMANCE_DATA.map(cat => {
                         const totalCatRev = CATEGORY_PERFORMANCE_DATA.reduce((a, c) => a + c.grossRevenue, 0);
                         const share = ((cat.grossRevenue / totalCatRev) * 100).toFixed(1);
                         return (
                           <div key={cat.id}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.25rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.2rem', flexWrap: 'wrap', gap: '0.2rem' }}>
                               <span style={{ color: '#E2E8F0', fontWeight: 600 }}>{cat.name}</span>
                               <span style={{ color: '#F5C542', fontWeight: 700 }}>
                                 KES {cat.grossRevenue.toLocaleString()} ({share}%)
@@ -835,7 +907,7 @@ export default function AdminPanel({
                             </div>
                             <div style={{
                               width: '100%',
-                              height: '10px',
+                              height: '8px',
                               backgroundColor: 'rgba(255, 255, 255, 0.06)',
                               borderRadius: '9999px',
                               overflow: 'hidden'
@@ -857,23 +929,24 @@ export default function AdminPanel({
                   <div style={{
                     backgroundColor: '#040B1A',
                     border: '1px solid rgba(255, 255, 255, 0.08)',
-                    borderRadius: '14px',
-                    padding: '1.25rem',
+                    borderRadius: '12px',
+                    padding: '1rem',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
+                    boxSizing: 'border-box'
                   }}>
-                    <div style={{ fontSize: '0.85rem', color: '#FFFFFF', fontWeight: 700, marginBottom: '0.75rem', alignSelf: 'flex-start' }}>
-                      Category Market Share Distribution
+                    <div style={{ fontSize: '0.8rem', color: '#FFFFFF', fontWeight: 700, marginBottom: '0.65rem', alignSelf: 'flex-start' }}>
+                      Category Market Share
                     </div>
                     
-                    <div style={{ position: 'relative', width: '180px', height: '180px' }}>
+                    <div style={{ position: 'relative', width: '160px', height: '160px' }}>
                       <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)', width: '100%', height: '100%' }}>
                         {(() => {
                           const totalCatRev = CATEGORY_PERFORMANCE_DATA.reduce((a, c) => a + c.grossRevenue, 0);
                           let accumulatedPercent = 0;
-                          return CATEGORY_PERFORMANCE_DATA.map((cat, i) => {
+                          return CATEGORY_PERFORMANCE_DATA.map((cat) => {
                             const percent = (cat.grossRevenue / totalCatRev) * 100;
                             const strokeDasharray = `${percent} ${100 - percent}`;
                             const strokeDashoffset = -accumulatedPercent;
@@ -905,7 +978,7 @@ export default function AdminPanel({
                         textAlign: 'center'
                       }}>
                         <span style={{ fontSize: '0.65rem', color: '#94A3B8', textTransform: 'uppercase' }}>Shop Total</span>
-                        <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#F5C542' }}>6 Categories</span>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#F5C542' }}>6 Sectors</span>
                       </div>
                     </div>
 
@@ -913,42 +986,38 @@ export default function AdminPanel({
                     <div style={{
                       display: 'grid',
                       gridTemplateColumns: 'repeat(2, 1fr)',
-                      gap: '0.5rem',
+                      gap: '0.4rem',
                       width: '100%',
-                      marginTop: '1rem',
-                      fontSize: '0.72rem'
+                      marginTop: '0.75rem',
+                      fontSize: '0.7rem'
                     }}>
                       {CATEGORY_PERFORMANCE_DATA.map(cat => (
-                        <div key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: cat.accent }} />
-                          <span style={{ color: '#94A3B8', truncate: true }}>{cat.name.split(' ')[0]}</span>
+                        <div key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                          <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: cat.accent, flexShrink: 0 }} />
+                          <span style={{ color: '#94A3B8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cat.name.split(' ')[0]}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 </div>
 
-                {/* Comprehensive Category Table */}
-                <div style={{
-                  overflowX: 'auto',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '12px'
-                }}>
+                {/* Category Table with Mobile Scroll Container */}
+                <div style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '10px' }}>
                   <table style={{
                     width: '100%',
+                    minWidth: '580px',
                     borderCollapse: 'collapse',
                     textAlign: 'left',
-                    fontSize: '0.825rem'
+                    fontSize: '0.78rem'
                   }}>
                     <thead>
                       <tr style={{ backgroundColor: '#0A1733', color: '#60A5FA', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                        <th style={{ padding: '0.85rem 1rem' }}>Category</th>
-                        <th style={{ padding: '0.85rem 1rem' }}>Units Sold</th>
-                        <th style={{ padding: '0.85rem 1rem' }}>Average Price</th>
-                        <th style={{ padding: '0.85rem 1rem' }}>Estimated Margin</th>
-                        <th style={{ padding: '0.85rem 1rem' }}>Top Product</th>
-                        <th style={{ padding: '0.85rem 1rem' }}>Stock Health</th>
-                        <th style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>Gross Inflow</th>
+                        <th style={{ padding: '0.65rem 0.85rem' }}>Category</th>
+                        <th style={{ padding: '0.65rem 0.85rem' }}>Units Sold</th>
+                        <th style={{ padding: '0.65rem 0.85rem' }}>Avg Price</th>
+                        <th style={{ padding: '0.65rem 0.85rem' }}>Margin</th>
+                        <th style={{ padding: '0.65rem 0.85rem' }}>Top Product</th>
+                        <th style={{ padding: '0.65rem 0.85rem', textAlign: 'right' }}>Gross Inflow</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -960,29 +1029,17 @@ export default function AdminPanel({
                             backgroundColor: i % 2 === 0 ? 'rgba(6, 17, 41, 0.5)' : 'rgba(10, 23, 51, 0.3)'
                           }}
                         >
-                          <td style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#FFFFFF' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: cat.accent }} />
+                          <td style={{ padding: '0.65rem 0.85rem', fontWeight: 700, color: '#FFFFFF' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: cat.accent, flexShrink: 0 }} />
                               {cat.name}
                             </div>
                           </td>
-                          <td style={{ padding: '0.85rem 1rem', color: '#E2E8F0' }}>{cat.unitsSold} units</td>
-                          <td style={{ padding: '0.85rem 1rem', color: '#94A3B8' }}>KES {cat.avgItemPrice.toLocaleString()}</td>
-                          <td style={{ padding: '0.85rem 1rem', color: '#10B981', fontWeight: 600 }}>{cat.marginPercent}%</td>
-                          <td style={{ padding: '0.85rem 1rem', color: '#CBD5E1', fontSize: '0.785rem' }}>{cat.topProduct}</td>
-                          <td style={{ padding: '0.85rem 1rem' }}>
-                            <span style={{
-                              backgroundColor: cat.stockHealth.includes('Alert') ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.12)',
-                              color: cat.stockHealth.includes('Alert') ? '#EF4444' : '#10B981',
-                              padding: '0.15rem 0.5rem',
-                              borderRadius: '6px',
-                              fontSize: '0.72rem',
-                              fontWeight: 600
-                            }}>
-                              {cat.stockHealth}
-                            </span>
-                          </td>
-                          <td style={{ padding: '0.85rem 1rem', textAlign: 'right', fontWeight: 800, color: '#F5C542', fontFamily: 'var(--font-display)' }}>
+                          <td style={{ padding: '0.65rem 0.85rem', color: '#E2E8F0' }}>{cat.unitsSold} units</td>
+                          <td style={{ padding: '0.65rem 0.85rem', color: '#94A3B8' }}>KES {cat.avgItemPrice.toLocaleString()}</td>
+                          <td style={{ padding: '0.65rem 0.85rem', color: '#10B981', fontWeight: 600 }}>{cat.marginPercent}%</td>
+                          <td style={{ padding: '0.65rem 0.85rem', color: '#CBD5E1', fontSize: '0.72rem' }}>{cat.topProduct}</td>
+                          <td style={{ padding: '0.65rem 0.85rem', textAlign: 'right', fontWeight: 800, color: '#F5C542', fontFamily: 'var(--font-display)' }}>
                             KES {cat.grossRevenue.toLocaleString()}
                           </td>
                         </tr>
@@ -999,62 +1056,46 @@ export default function AdminPanel({
             {(analyticsSubTab === 'all' || analyticsSubTab === 'trends') && (
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-                gap: '1.5rem'
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
+                gap: '1rem',
+                width: '100%'
               }}>
                 {/* Monthly Revenue Trend Line/Area Chart */}
                 <div className="card-glass" style={{
                   backgroundColor: '#071226',
                   border: '1px solid rgba(30, 107, 255, 0.3)',
-                  borderRadius: '20px',
-                  padding: '1.5rem'
+                  borderRadius: '16px',
+                  padding: '1.25rem',
+                  boxSizing: 'border-box'
                 }}>
-                  <div style={{ marginBottom: '1.25rem' }}>
-                    <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
-                      6-Month Revenue Inflow Trajectory
+                  <div style={{ marginBottom: '1rem' }}>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
+                      6-Month Revenue Trajectory
                     </h3>
-                    <p style={{ fontSize: '0.785rem', color: '#94A3B8', marginTop: '0.25rem' }}>
-                      Comparison of Shop Product Sales vs. Professional Services fees over May - Oct 2026.
+                    <p style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '0.2rem' }}>
+                      Products vs. Professional Services fees over May - Oct 2026.
                     </p>
                   </div>
 
-                  {/* SVG Area Curve */}
                   <div style={{
                     backgroundColor: '#040B1A',
                     border: '1px solid rgba(255, 255, 255, 0.08)',
-                    borderRadius: '12px',
-                    padding: '1.25rem'
+                    borderRadius: '10px',
+                    padding: '1rem',
+                    boxSizing: 'border-box'
                   }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: '140px', gap: '0.75rem', paddingTop: '1rem' }}>
-                      {MONTHLY_REVENUE_TREND.map((item, idx) => {
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: '120px', gap: '0.4rem', paddingTop: '0.5rem' }}>
+                      {MONTHLY_REVENUE_TREND.map((item) => {
                         const maxTrend = 2200000;
-                        const prodHeight = (item.productSales / maxTrend) * 120;
-                        const srvHeight = (item.servicesInflow / maxTrend) * 120;
+                        const prodHeight = (item.productSales / maxTrend) * 100;
+                        const srvHeight = (item.servicesInflow / maxTrend) * 100;
                         return (
                           <div key={item.month} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
-                            <div style={{ width: '100%', maxWidth: '28px', display: 'flex', flexDirection: 'column-reverse', gap: '2px', alignItems: 'center' }}>
-                              {/* Product Sales Bar */}
-                              <div 
-                                title={`Product Sales: KES ${item.productSales.toLocaleString()}`}
-                                style={{
-                                  width: '100%',
-                                  height: `${prodHeight}px`,
-                                  backgroundColor: '#1E6BFF',
-                                  borderRadius: '3px 3px 0 0'
-                                }} 
-                              />
-                              {/* Services Inflow Bar */}
-                              <div 
-                                title={`Services Inflow: KES ${item.servicesInflow.toLocaleString()}`}
-                                style={{
-                                  width: '100%',
-                                  height: `${srvHeight}px`,
-                                  backgroundColor: '#F5C542',
-                                  borderRadius: '3px 3px 0 0'
-                                }} 
-                              />
+                            <div style={{ width: '100%', maxWidth: '24px', display: 'flex', flexDirection: 'column-reverse', gap: '2px', alignItems: 'center' }}>
+                              <div style={{ width: '100%', height: `${prodHeight}px`, backgroundColor: '#1E6BFF', borderRadius: '2px 2px 0 0' }} />
+                              <div style={{ width: '100%', height: `${srvHeight}px`, backgroundColor: '#F5C542', borderRadius: '2px 2px 0 0' }} />
                             </div>
-                            <span style={{ fontSize: '0.65rem', color: '#94A3B8', marginTop: '0.5rem', whiteSpace: 'nowrap' }}>
+                            <span style={{ fontSize: '0.62rem', color: '#94A3B8', marginTop: '0.35rem', whiteSpace: 'nowrap' }}>
                               {item.month.split(' ')[0]}
                             </span>
                           </div>
@@ -1062,14 +1103,14 @@ export default function AdminPanel({
                       })}
                     </div>
                     {/* Legend */}
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginTop: '1rem', fontSize: '0.75rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                        <span style={{ width: '10px', height: '10px', backgroundColor: '#1E6BFF', borderRadius: '2px' }} />
-                        <span style={{ color: '#CBD5E1' }}>Shop Products</span>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '0.75rem', fontSize: '0.72rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <span style={{ width: '8px', height: '8px', backgroundColor: '#1E6BFF', borderRadius: '2px' }} />
+                        <span style={{ color: '#CBD5E1' }}>Products</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                        <span style={{ width: '10px', height: '10px', backgroundColor: '#F5C542', borderRadius: '2px' }} />
-                        <span style={{ color: '#CBD5E1' }}>Services & Consultations</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <span style={{ width: '8px', height: '8px', backgroundColor: '#F5C542', borderRadius: '2px' }} />
+                        <span style={{ color: '#CBD5E1' }}>Services</span>
                       </div>
                     </div>
                   </div>
@@ -1079,37 +1120,38 @@ export default function AdminPanel({
                 <div className="card-glass" style={{
                   backgroundColor: '#071226',
                   border: '1px solid rgba(16, 185, 129, 0.3)',
-                  borderRadius: '20px',
-                  padding: '1.5rem'
+                  borderRadius: '16px',
+                  padding: '1.25rem',
+                  boxSizing: 'border-box'
                 }}>
-                  <div style={{ marginBottom: '1.25rem' }}>
-                    <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
-                      Top County Revenue Distribution
+                  <div style={{ marginBottom: '1rem' }}>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
+                      Top County Distribution
                     </h3>
-                    <p style={{ fontSize: '0.785rem', color: '#94A3B8', marginTop: '0.25rem' }}>
-                      Inflows concentrated across Kenya's high-productivity agricultural breadbaskets.
+                    <p style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '0.2rem' }}>
+                      Revenue across Kenya's high-productivity farming zones.
                     </p>
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     {COUNTY_REVENUE_DATA.map((c, i) => (
                       <div key={c.county} style={{
                         backgroundColor: '#0A1733',
                         border: '1px solid rgba(255, 255, 255, 0.06)',
-                        padding: '0.75rem 1rem',
-                        borderRadius: '10px',
+                        padding: '0.65rem 0.85rem',
+                        borderRadius: '8px',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center'
                       }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                           <span style={{
-                            width: '24px',
-                            height: '24px',
+                            width: '20px',
+                            height: '20px',
                             borderRadius: '50%',
                             backgroundColor: i === 0 ? '#F5C542' : 'rgba(255, 255, 255, 0.1)',
                             color: i === 0 ? '#050B18' : '#FFFFFF',
-                            fontSize: '0.72rem',
+                            fontSize: '0.68rem',
                             fontWeight: 800,
                             display: 'flex',
                             alignItems: 'center',
@@ -1118,15 +1160,15 @@ export default function AdminPanel({
                             {i + 1}
                           </span>
                           <div>
-                            <div style={{ fontWeight: 700, fontSize: '0.825rem', color: '#FFFFFF' }}>{c.county}</div>
-                            <div style={{ fontSize: '0.7rem', color: '#64748B' }}>{c.orders} Dispatches</div>
+                            <div style={{ fontWeight: 700, fontSize: '0.785rem', color: '#FFFFFF' }}>{c.county}</div>
+                            <div style={{ fontSize: '0.68rem', color: '#64748B' }}>{c.orders} Orders</div>
                           </div>
                         </div>
                         <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontWeight: 800, color: '#F5C542', fontSize: '0.9rem', fontFamily: 'var(--font-display)' }}>
+                          <div style={{ fontWeight: 800, color: '#F5C542', fontSize: '0.85rem', fontFamily: 'var(--font-display)' }}>
                             KES {c.revenue.toLocaleString()}
                           </div>
-                          <div style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: 600 }}>{c.share} Share</div>
+                          <div style={{ fontSize: '0.68rem', color: '#10B981', fontWeight: 600 }}>{c.share}</div>
                         </div>
                       </div>
                     ))}
@@ -1141,46 +1183,50 @@ export default function AdminPanel({
         {/* TAB 2: SHOP INVENTORY MANAGER (EDIT THE WHOLE SHOP) */}
         {/* -------------------------------------------------- */}
         {activeTab === 'inventory' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', width: '100%' }}>
             {/* Inventory Controls Bar */}
             <div className="card-glass" style={{
               backgroundColor: '#071226',
               border: '1px solid rgba(30, 107, 255, 0.35)',
               borderRadius: '16px',
-              padding: '1.25rem',
+              padding: '1rem',
               display: 'flex',
               flexDirection: 'column',
-              gap: '1rem'
+              gap: '0.85rem',
+              boxSizing: 'border-box',
+              width: '100%'
             }}>
               <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 flexWrap: 'wrap',
-                gap: '1rem'
+                gap: '0.75rem'
               }}>
                 <div>
-                  <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
+                  <h2 style={{ fontSize: 'clamp(1.1rem, 3.5vw, 1.3rem)', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
                     Shop Catalog & Inventory Master
                   </h2>
-                  <p style={{ fontSize: '0.825rem', color: '#94A3B8', margin: '0.25rem 0 0 0' }}>
-                    Full management control: add products, modify prices, update stock, edit active ingredients and PCPB codes.
+                  <p style={{ fontSize: '0.785rem', color: '#94A3B8', margin: '0.2rem 0 0 0' }}>
+                    Full management control: add products, modify prices, update stock, and edit active ingredients.
                   </p>
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap', width: '100%', justifyContent: 'flex-start' }}>
                   <button
                     onClick={() => setIsAddProductOpen(true)}
                     className="btn btn-primary"
                     style={{
-                      padding: '0.65rem 1.25rem',
+                      padding: '0.55rem 1rem',
                       fontWeight: 700,
-                      fontSize: '0.875rem',
-                      gap: '0.45rem'
+                      fontSize: '0.8rem',
+                      gap: '0.35rem',
+                      flex: '1 1 auto',
+                      justifyContent: 'center'
                     }}
                   >
-                    <Plus size={16} />
-                    <span>Add New Product</span>
+                    <Plus size={15} />
+                    <span>Add Product</span>
                   </button>
                   <button
                     onClick={onResetDefaultProducts}
@@ -1188,8 +1234,9 @@ export default function AdminPanel({
                     style={{
                       borderColor: 'rgba(255, 255, 255, 0.15)',
                       color: '#94A3B8',
-                      fontSize: '0.8rem',
-                      gap: '0.4rem'
+                      fontSize: '0.78rem',
+                      gap: '0.35rem',
+                      padding: '0.55rem 0.85rem'
                     }}
                     title="Restore original starter products catalog"
                   >
@@ -1202,15 +1249,15 @@ export default function AdminPanel({
               {/* Filters Row */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: '0.75rem'
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))',
+                gap: '0.5rem',
+                width: '100%'
               }}>
-                {/* Search Input */}
-                <div style={{ position: 'relative' }}>
-                  <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
+                <div style={{ position: 'relative', width: '100%' }}>
+                  <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
                   <input
                     type="text"
-                    placeholder="Search by name, brand, ingredient..."
+                    placeholder="Search name, brand, active ingredient..."
                     value={invSearch}
                     onChange={(e) => setInvSearch(e.target.value)}
                     style={{
@@ -1218,24 +1265,26 @@ export default function AdminPanel({
                       backgroundColor: '#040B1A',
                       border: '1px solid rgba(255, 255, 255, 0.12)',
                       borderRadius: '8px',
-                      padding: '0.55rem 0.75rem 0.55rem 2.25rem',
+                      padding: '0.5rem 0.65rem 0.5rem 2rem',
                       color: '#FFFFFF',
-                      fontSize: '0.825rem'
+                      fontSize: '0.785rem',
+                      boxSizing: 'border-box'
                     }}
                   />
                 </div>
 
-                {/* Category Dropdown */}
                 <select
                   value={invCategory}
                   onChange={(e) => setInvCategory(e.target.value)}
                   style={{
+                    width: '100%',
                     backgroundColor: '#040B1A',
                     border: '1px solid rgba(255, 255, 255, 0.12)',
                     borderRadius: '8px',
-                    padding: '0.55rem 0.75rem',
+                    padding: '0.5rem 0.65rem',
                     color: '#FFFFFF',
-                    fontSize: '0.825rem'
+                    fontSize: '0.785rem',
+                    boxSizing: 'border-box'
                   }}
                 >
                   <option value="all">All Categories ({products.length})</option>
@@ -1244,17 +1293,18 @@ export default function AdminPanel({
                   ))}
                 </select>
 
-                {/* Stock Health Filter */}
                 <select
                   value={invStockFilter}
                   onChange={(e) => setInvStockFilter(e.target.value)}
                   style={{
+                    width: '100%',
                     backgroundColor: '#040B1A',
                     border: '1px solid rgba(255, 255, 255, 0.12)',
                     borderRadius: '8px',
-                    padding: '0.55rem 0.75rem',
+                    padding: '0.5rem 0.65rem',
                     color: '#FFFFFF',
-                    fontSize: '0.825rem'
+                    fontSize: '0.785rem',
+                    boxSizing: 'border-box'
                   }}
                 >
                   <option value="all">All Stock Statuses</option>
@@ -1264,23 +1314,156 @@ export default function AdminPanel({
               </div>
             </div>
 
-            {/* Products Table */}
-            <div className="card-glass" style={{
+            {/* RESPONSIVE INVENTORY VIEW: CARDS ON MOBILE (<=768px), TABLE ON DESKTOP */}
+            {/* 1. Mobile Cards View */}
+            <div className="mobile-inventory-cards" style={{ display: 'none', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
+              {filteredProducts.map((prod) => {
+                const isLow = (prod.stockCount <= 10) || prod.isLowStock;
+                return (
+                  <div key={prod.id} style={{
+                    backgroundColor: '#071228',
+                    border: isLow ? '1.5px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '12px',
+                    padding: '0.85rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.65rem',
+                    boxSizing: 'border-box',
+                    width: '100%'
+                  }}>
+                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                      <img
+                        src={prod.image}
+                        alt={prod.name}
+                        style={{
+                          width: '54px',
+                          height: '54px',
+                          borderRadius: '8px',
+                          objectFit: 'cover',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          flexShrink: 0
+                        }}
+                      />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, color: '#FFFFFF', fontSize: '0.85rem', lineHeight: 1.25, overflowWrap: 'anywhere' }}>
+                          {prod.name}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: '#60A5FA', marginTop: '0.2rem' }}>
+                          {prod.brand} • <span style={{ color: '#94A3B8' }}>{prod.activeIngredient || 'Formulated'}</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.35rem', marginTop: '0.35rem', flexWrap: 'wrap' }}>
+                          <span style={{ backgroundColor: 'rgba(30, 107, 255, 0.2)', color: '#60A5FA', fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 600 }}>
+                            {prod.category}
+                          </span>
+                          {prod.isBestSeller && (
+                            <span style={{ backgroundColor: 'rgba(245, 197, 66, 0.2)', color: '#F5C542', fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 700 }}>
+                              Best Seller
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+                      paddingTop: '0.6rem',
+                      flexWrap: 'wrap',
+                      gap: '0.5rem'
+                    }}>
+                      <div>
+                        <div style={{ fontSize: '0.65rem', color: '#64748B', textTransform: 'uppercase' }}>Price</div>
+                        <div style={{ fontWeight: 800, color: '#F5C542', fontFamily: 'var(--font-display)', fontSize: '0.95rem' }}>
+                          KES {prod.price.toLocaleString()}
+                        </div>
+                      </div>
+
+                      {/* Stock Counter with inline quick adjust */}
+                      <div>
+                        <div style={{ fontSize: '0.65rem', color: isLow ? '#EF4444' : '#64748B', textTransform: 'uppercase', fontWeight: 600 }}>
+                          {isLow ? '⚠️ Low Stock' : 'In Stock'}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <button
+                            onClick={() => handleQuickStockAdjust(prod.id, -1)}
+                            style={{
+                              width: '26px',
+                              height: '26px',
+                              borderRadius: '6px',
+                              border: '1px solid rgba(255, 255, 255, 0.15)',
+                              backgroundColor: '#040B1A',
+                              color: '#FFFFFF',
+                              cursor: 'pointer',
+                              fontWeight: 700
+                            }}
+                          >
+                            -
+                          </button>
+                          <span style={{ minWidth: '28px', textAlign: 'center', fontWeight: 800, color: isLow ? '#EF4444' : '#10B981', fontSize: '0.85rem' }}>
+                            {prod.stockCount ?? 20}
+                          </span>
+                          <button
+                            onClick={() => handleQuickStockAdjust(prod.id, 5)}
+                            style={{
+                              width: '26px',
+                              height: '26px',
+                              borderRadius: '6px',
+                              border: '1px solid rgba(255, 255, 255, 0.15)',
+                              backgroundColor: '#040B1A',
+                              color: '#FFFFFF',
+                              cursor: 'pointer',
+                              fontWeight: 700
+                            }}
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Action buttons */}
+                      <div style={{ display: 'flex', gap: '0.35rem', marginLeft: 'auto' }}>
+                        <button
+                          onClick={() => setEditingProduct(prod)}
+                          className="btn btn-sm btn-outline"
+                          style={{ borderColor: 'rgba(30, 107, 255, 0.5)', color: '#60A5FA', padding: '0.35rem 0.65rem', fontSize: '0.75rem' }}
+                        >
+                          <Edit2 size={13} style={{ marginRight: '4px' }} />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirmId(prod.id)}
+                          className="btn btn-sm btn-outline"
+                          style={{ borderColor: 'rgba(239, 68, 68, 0.5)', color: '#EF4444', padding: '0.35rem 0.65rem', fontSize: '0.75rem' }}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 2. Desktop Table View */}
+            <div className="desktop-inventory-table card-glass" style={{
               backgroundColor: '#071226',
               border: '1px solid rgba(255, 255, 255, 0.08)',
               borderRadius: '16px',
               padding: '0',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              width: '100%'
             }}>
               <div style={{
-                padding: '0.85rem 1.25rem',
+                padding: '0.75rem 1.25rem',
                 borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 backgroundColor: '#050D20'
               }}>
-                <span style={{ fontSize: '0.825rem', color: '#94A3B8' }}>
+                <span style={{ fontSize: '0.8rem', color: '#94A3B8' }}>
                   Showing <strong style={{ color: '#F5C542' }}>{filteredProducts.length}</strong> items in catalog
                 </span>
                 {invCategory !== 'all' && (
@@ -1293,17 +1476,17 @@ export default function AdminPanel({
                 )}
               </div>
 
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.825rem' }}>
+              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
+                <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.8rem' }}>
                   <thead>
                     <tr style={{ backgroundColor: '#09152E', color: '#60A5FA', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                      <th style={{ padding: '0.85rem 1rem', width: '60px' }}>Image</th>
-                      <th style={{ padding: '0.85rem 1rem' }}>Product Details</th>
-                      <th style={{ padding: '0.85rem 1rem' }}>Category</th>
-                      <th style={{ padding: '0.85rem 1rem' }}>Price (KES)</th>
-                      <th style={{ padding: '0.85rem 1rem' }}>Inventory Stock</th>
-                      <th style={{ padding: '0.85rem 1rem' }}>Status Badges</th>
-                      <th style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>Actions</th>
+                      <th style={{ padding: '0.75rem 1rem', width: '50px' }}>Image</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Product Details</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Category</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Price (KES)</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Stock</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Badges</th>
+                      <th style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1317,143 +1500,50 @@ export default function AdminPanel({
                             backgroundColor: idx % 2 === 0 ? 'rgba(5, 11, 24, 0.6)' : 'rgba(7, 18, 38, 0.3)'
                           }}
                         >
-                          {/* Thumbnail */}
-                          <td style={{ padding: '0.75rem 1rem' }}>
+                          <td style={{ padding: '0.65rem 1rem' }}>
                             <img
                               src={prod.image}
                               alt={prod.name}
-                              style={{
-                                width: '44px',
-                                height: '44px',
-                                objectFit: 'cover',
-                                borderRadius: '8px',
-                                border: '1px solid rgba(255, 255, 255, 0.1)'
-                              }}
+                              style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)' }}
                             />
                           </td>
-
-                          {/* Details */}
-                          <td style={{ padding: '0.75rem 1rem', maxWidth: '280px' }}>
-                            <div style={{ fontWeight: 700, color: '#FFFFFF', fontSize: '0.85rem' }}>
-                              {prod.name}
-                            </div>
-                            <div style={{ fontSize: '0.72rem', color: '#60A5FA', marginTop: '0.15rem' }}>
-                              {prod.brand} • <span style={{ color: '#94A3B8' }}>{prod.activeIngredient || 'Standard Formulated'}</span>
+                          <td style={{ padding: '0.65rem 1rem', maxWidth: '240px' }}>
+                            <div style={{ fontWeight: 700, color: '#FFFFFF', fontSize: '0.825rem' }}>{prod.name}</div>
+                            <div style={{ fontSize: '0.7rem', color: '#60A5FA', marginTop: '0.1rem' }}>
+                              {prod.brand} • <span style={{ color: '#94A3B8' }}>{prod.activeIngredient || 'Formulated'}</span>
                             </div>
                           </td>
-
-                          {/* Category */}
-                          <td style={{ padding: '0.75rem 1rem' }}>
-                            <span style={{
-                              backgroundColor: 'rgba(30, 107, 255, 0.15)',
-                              color: '#60A5FA',
-                              padding: '0.2rem 0.5rem',
-                              borderRadius: '6px',
-                              fontSize: '0.72rem',
-                              fontWeight: 600
-                            }}>
+                          <td style={{ padding: '0.65rem 1rem' }}>
+                            <span style={{ backgroundColor: 'rgba(30, 107, 255, 0.15)', color: '#60A5FA', padding: '0.15rem 0.45rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 600 }}>
                               {prod.category}
                             </span>
                           </td>
-
-                          {/* Price */}
-                          <td style={{ padding: '0.75rem 1rem' }}>
+                          <td style={{ padding: '0.65rem 1rem' }}>
                             <div style={{ fontWeight: 800, color: '#F5C542', fontFamily: 'var(--font-display)' }}>
                               KES {prod.price.toLocaleString()}
                             </div>
-                            {prod.originalPrice > prod.price && (
-                              <div style={{ fontSize: '0.7rem', color: '#64748B', textDecoration: 'line-through' }}>
-                                KES {prod.originalPrice.toLocaleString()}
-                              </div>
-                            )}
                           </td>
-
-                          {/* Stock Counter with inline quick adjust */}
-                          <td style={{ padding: '0.75rem 1rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                              <button
-                                onClick={() => handleQuickStockAdjust(prod.id, -1)}
-                                style={{
-                                  width: '24px',
-                                  height: '24px',
-                                  borderRadius: '6px',
-                                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                                  backgroundColor: '#040B1A',
-                                  color: '#FFFFFF',
-                                  cursor: 'pointer',
-                                  fontWeight: 700
-                                }}
-                                title="Decrease stock by 1"
-                              >
-                                -
-                              </button>
-                              <span style={{
-                                minWidth: '32px',
-                                textAlign: 'center',
-                                fontWeight: 800,
-                                color: isLow ? '#EF4444' : '#10B981',
-                                fontSize: '0.85rem'
-                              }}>
-                                {prod.stockCount ?? 20}
+                          <td style={{ padding: '0.65rem 1rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                              <button onClick={() => handleQuickStockAdjust(prod.id, -1)} style={{ width: '22px', height: '22px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.15)', backgroundColor: '#040B1A', color: '#FFFFFF', cursor: 'pointer', fontWeight: 700 }}>-</button>
+                              <span style={{ minWidth: '26px', textAlign: 'center', fontWeight: 800, color: isLow ? '#EF4444' : '#10B981', fontSize: '0.8rem' }}>{prod.stockCount ?? 20}</span>
+                              <button onClick={() => handleQuickStockAdjust(prod.id, 5)} style={{ width: '22px', height: '22px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.15)', backgroundColor: '#040B1A', color: '#FFFFFF', cursor: 'pointer', fontWeight: 700 }}>+</button>
+                            </div>
+                          </td>
+                          <td style={{ padding: '0.65rem 1rem' }}>
+                            {prod.isBestSeller && (
+                              <span style={{ backgroundColor: 'rgba(245, 197, 66, 0.2)', color: '#F5C542', fontSize: '0.65rem', padding: '0.1rem 0.35rem', borderRadius: '4px', fontWeight: 700 }}>
+                                Best Seller
                               </span>
-                              <button
-                                onClick={() => handleQuickStockAdjust(prod.id, 5)}
-                                style={{
-                                  width: '24px',
-                                  height: '24px',
-                                  borderRadius: '6px',
-                                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                                  backgroundColor: '#040B1A',
-                                  color: '#FFFFFF',
-                                  cursor: 'pointer',
-                                  fontWeight: 700
-                                }}
-                                title="Quick restock +5"
-                              >
-                                +
-                              </button>
-                            </div>
-                            {isLow && (
-                              <div style={{ fontSize: '0.68rem', color: '#EF4444', marginTop: '0.2rem', fontWeight: 600 }}>
-                                Low Stock Alert
-                              </div>
                             )}
                           </td>
-
-                          {/* Badges */}
-                          <td style={{ padding: '0.75rem 1rem' }}>
-                            <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
-                              {prod.isBestSeller && (
-                                <span style={{ backgroundColor: 'rgba(245, 197, 66, 0.2)', color: '#F5C542', fontSize: '0.68rem', padding: '0.1rem 0.35rem', borderRadius: '4px', fontWeight: 700 }}>
-                                  Best Seller
-                                </span>
-                              )}
-                              {prod.isRestricted && (
-                                <span style={{ backgroundColor: 'rgba(239, 68, 68, 0.2)', color: '#EF4444', fontSize: '0.68rem', padding: '0.1rem 0.35rem', borderRadius: '4px', fontWeight: 700 }}>
-                                  Regulated
-                                </span>
-                              )}
-                            </div>
-                          </td>
-
-                          {/* Actions */}
-                          <td style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.4rem' }}>
-                              <button
-                                onClick={() => setEditingProduct(prod)}
-                                className="btn btn-icon btn-outline"
-                                style={{ width: '32px', height: '32px', borderColor: 'rgba(30, 107, 255, 0.4)', color: '#60A5FA' }}
-                                title="Edit entire product details"
-                              >
-                                <Edit2 size={14} />
+                          <td style={{ padding: '0.65rem 1rem', textAlign: 'right' }}>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.35rem' }}>
+                              <button onClick={() => setEditingProduct(prod)} className="btn btn-icon btn-outline" style={{ width: '30px', height: '30px', color: '#60A5FA' }}>
+                                <Edit2 size={13} />
                               </button>
-                              <button
-                                onClick={() => setDeleteConfirmId(prod.id)}
-                                className="btn btn-icon btn-outline"
-                                style={{ width: '32px', height: '32px', borderColor: 'rgba(239, 68, 68, 0.4)', color: '#EF4444' }}
-                                title="Delete product"
-                              >
-                                <Trash2 size={14} />
+                              <button onClick={() => setDeleteConfirmId(prod.id)} className="btn btn-icon btn-outline" style={{ width: '30px', height: '30px', color: '#EF4444' }}>
+                                <Trash2 size={13} />
                               </button>
                             </div>
                           </td>
@@ -1471,39 +1561,41 @@ export default function AdminPanel({
         {/* TAB 3: ORDERS & SALES MANAGER */}
         {/* -------------------------------------------------- */}
         {activeTab === 'orders' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', width: '100%' }}>
             {/* Orders Header Bar */}
             <div className="card-glass" style={{
               backgroundColor: '#071226',
               border: '1px solid rgba(30, 107, 255, 0.35)',
               borderRadius: '16px',
-              padding: '1.25rem',
+              padding: '1rem',
               display: 'flex',
               flexDirection: 'column',
-              gap: '1rem'
+              gap: '0.85rem',
+              boxSizing: 'border-box',
+              width: '100%'
             }}>
               <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 flexWrap: 'wrap',
-                gap: '1rem'
+                gap: '0.75rem'
               }}>
                 <div>
-                  <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
+                  <h2 style={{ fontSize: 'clamp(1.1rem, 3.5vw, 1.3rem)', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
                     Sales & Farmgate Orders Desk
                   </h2>
-                  <p style={{ fontSize: '0.825rem', color: '#94A3B8', margin: '0.25rem 0 0 0' }}>
-                    Monitor customer dispatches, verify M-Pesa STK transactions, and update delivery milestones.
+                  <p style={{ fontSize: '0.785rem', color: '#94A3B8', margin: '0.2rem 0 0 0' }}>
+                    Track customer dispatches, verify M-Pesa STK transactions, and update delivery milestones.
                   </p>
                 </div>
 
                 <button
                   onClick={() => setIsNewSaleOpen(true)}
                   className="btn btn-primary"
-                  style={{ padding: '0.6rem 1.25rem', fontSize: '0.85rem', fontWeight: 700, gap: '0.45rem' }}
+                  style={{ padding: '0.55rem 1rem', fontSize: '0.8rem', fontWeight: 700, gap: '0.35rem' }}
                 >
-                  <Plus size={16} />
+                  <Plus size={15} />
                   <span>Log Direct Walk-In Sale</span>
                 </button>
               </div>
@@ -1511,14 +1603,15 @@ export default function AdminPanel({
               {/* Search & Status Filters */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                gap: '0.75rem'
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))',
+                gap: '0.5rem',
+                width: '100%'
               }}>
-                <div style={{ position: 'relative' }}>
-                  <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
+                <div style={{ position: 'relative', width: '100%' }}>
+                  <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
                   <input
                     type="text"
-                    placeholder="Search by Order ID, farmer name, phone, county..."
+                    placeholder="Search Order ID, farmer, phone, county..."
                     value={orderSearch}
                     onChange={(e) => setOrderSearch(e.target.value)}
                     style={{
@@ -1526,14 +1619,15 @@ export default function AdminPanel({
                       backgroundColor: '#040B1A',
                       border: '1px solid rgba(255, 255, 255, 0.12)',
                       borderRadius: '8px',
-                      padding: '0.55rem 0.75rem 0.55rem 2.25rem',
+                      padding: '0.5rem 0.65rem 0.5rem 2rem',
                       color: '#FFFFFF',
-                      fontSize: '0.825rem'
+                      fontSize: '0.785rem',
+                      boxSizing: 'border-box'
                     }}
                   />
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.35rem', overflowX: 'auto' }}>
+                <div style={{ display: 'flex', gap: '0.3rem', overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
                   {['all', 'Pending', 'Processing', 'Dispatched', 'Delivered'].map(status => (
                     <button
                       key={status}
@@ -1542,12 +1636,13 @@ export default function AdminPanel({
                         backgroundColor: orderStatusFilter === status ? '#1E6BFF' : '#040B1A',
                         border: '1px solid rgba(255, 255, 255, 0.12)',
                         color: orderStatusFilter === status ? '#FFFFFF' : '#94A3B8',
-                        padding: '0.45rem 0.85rem',
+                        padding: '0.4rem 0.65rem',
                         borderRadius: '6px',
-                        fontSize: '0.785rem',
+                        fontSize: '0.75rem',
                         fontWeight: 600,
                         cursor: 'pointer',
-                        whiteSpace: 'nowrap'
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0
                       }}
                     >
                       {status === 'all' ? `All (${orders.length})` : status}
@@ -1557,24 +1652,106 @@ export default function AdminPanel({
               </div>
             </div>
 
-            {/* Orders Table */}
-            <div className="card-glass" style={{
+            {/* RESPONSIVE ORDERS VIEW: CARDS ON MOBILE, TABLE ON DESKTOP */}
+            {/* 1. Mobile Orders Cards */}
+            <div className="mobile-orders-cards" style={{ display: 'none', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
+              {filteredOrders.map((ord) => {
+                const statusColor = 
+                  ord.status === 'Delivered' ? '#10B981' :
+                  ord.status === 'Dispatched' ? '#60A5FA' :
+                  ord.status === 'Processing' ? '#F5C542' : '#EF4444';
+                return (
+                  <div key={ord.id} style={{
+                    backgroundColor: '#071228',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '12px',
+                    padding: '0.85rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.5rem',
+                    boxSizing: 'border-box',
+                    width: '100%'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 800, color: '#FFFFFF', fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                        {ord.id}
+                      </span>
+                      <select
+                        value={ord.status}
+                        onChange={(e) => handleUpdateOrderStatus(ord.id, e.target.value)}
+                        style={{
+                          backgroundColor: '#040B1A',
+                          border: `1px solid ${statusColor}`,
+                          color: statusColor,
+                          borderRadius: '6px',
+                          padding: '0.2rem 0.45rem',
+                          fontSize: '0.72rem',
+                          fontWeight: 700
+                        }}
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Dispatched">Dispatched</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                      </select>
+                    </div>
+
+                    <div style={{ fontSize: '0.785rem', color: '#E2E8F0' }}>
+                      <strong>{ord.customerName}</strong> • <span style={{ color: '#94A3B8' }}>{ord.county} ({ord.phone})</span>
+                    </div>
+
+                    <div style={{ fontSize: '0.72rem', color: '#94A3B8', overflowWrap: 'anywhere' }}>
+                      {ord.items?.map(it => `${it.qty}x ${it.name}`).join(', ')}
+                    </div>
+
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+                      paddingTop: '0.5rem',
+                      marginTop: '0.25rem'
+                    }}>
+                      <div>
+                        <div style={{ fontSize: '0.65rem', color: '#64748B' }}>Total ({ord.paymentMethod})</div>
+                        <div style={{ fontWeight: 800, color: '#F5C542', fontFamily: 'var(--font-display)', fontSize: '0.95rem' }}>
+                          KES {ord.total?.toLocaleString()}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setSelectedOrderDetails(ord)}
+                        className="btn btn-sm btn-outline"
+                        style={{ borderColor: 'rgba(30, 107, 255, 0.5)', color: '#60A5FA', padding: '0.35rem 0.65rem', fontSize: '0.75rem' }}
+                      >
+                        <Eye size={12} style={{ marginRight: '4px' }} />
+                        Receipt
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 2. Desktop Orders Table */}
+            <div className="desktop-orders-table card-glass" style={{
               backgroundColor: '#071226',
               border: '1px solid rgba(255, 255, 255, 0.08)',
               borderRadius: '16px',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              width: '100%'
             }}>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.825rem' }}>
+              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
+                <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.8rem' }}>
                   <thead>
                     <tr style={{ backgroundColor: '#09152E', color: '#60A5FA', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                      <th style={{ padding: '0.85rem 1rem' }}>Order Ref & Time</th>
-                      <th style={{ padding: '0.85rem 1rem' }}>Farmer & County</th>
-                      <th style={{ padding: '0.85rem 1rem' }}>Items Purchased</th>
-                      <th style={{ padding: '0.85rem 1rem' }}>Total (KES)</th>
-                      <th style={{ padding: '0.85rem 1rem' }}>Payment / M-Pesa</th>
-                      <th style={{ padding: '0.85rem 1rem' }}>Current Status</th>
-                      <th style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>Actions</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Order Ref</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Farmer & County</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Items</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Total</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Payment</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Status</th>
+                      <th style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1591,49 +1768,29 @@ export default function AdminPanel({
                             backgroundColor: idx % 2 === 0 ? 'rgba(5, 11, 24, 0.6)' : 'rgba(7, 18, 38, 0.3)'
                           }}
                         >
-                          {/* Ref */}
-                          <td style={{ padding: '0.85rem 1rem' }}>
-                            <div style={{ fontWeight: 800, color: '#FFFFFF', fontFamily: 'monospace' }}>
-                              {ord.id}
-                            </div>
-                            <div style={{ fontSize: '0.7rem', color: '#64748B' }}>
-                              {ord.date} {ord.time ? `• ${ord.time}` : ''}
-                            </div>
+                          <td style={{ padding: '0.75rem 1rem' }}>
+                            <div style={{ fontWeight: 800, color: '#FFFFFF', fontFamily: 'monospace' }}>{ord.id}</div>
+                            <div style={{ fontSize: '0.68rem', color: '#64748B' }}>{ord.date}</div>
                           </td>
-
-                          {/* Customer */}
-                          <td style={{ padding: '0.85rem 1rem' }}>
+                          <td style={{ padding: '0.75rem 1rem' }}>
                             <div style={{ fontWeight: 700, color: '#FFFFFF' }}>{ord.customerName}</div>
-                            <div style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{ord.county} ({ord.phone})</div>
+                            <div style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{ord.county}</div>
                           </td>
-
-                          {/* Items summary */}
-                          <td style={{ padding: '0.85rem 1rem', maxWidth: '240px' }}>
-                            <div style={{ fontSize: '0.785rem', color: '#E2E8F0' }}>
-                              {ord.items?.map(it => `${it.qty}x ${it.name}`).slice(0, 2).join(', ')}
-                              {ord.items?.length > 2 && ` +${ord.items.length - 2} more`}
+                          <td style={{ padding: '0.75rem 1rem', maxWidth: '200px' }}>
+                            <div style={{ fontSize: '0.75rem', color: '#E2E8F0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {ord.items?.map(it => `${it.qty}x ${it.name}`).join(', ')}
                             </div>
                           </td>
-
-                          {/* Total */}
-                          <td style={{ padding: '0.85rem 1rem' }}>
-                            <div style={{ fontWeight: 800, color: '#F5C542', fontFamily: 'var(--font-display)', fontSize: '0.9rem' }}>
+                          <td style={{ padding: '0.75rem 1rem' }}>
+                            <div style={{ fontWeight: 800, color: '#F5C542', fontFamily: 'var(--font-display)' }}>
                               KES {ord.total?.toLocaleString()}
                             </div>
                           </td>
-
-                          {/* Payment */}
-                          <td style={{ padding: '0.85rem 1rem' }}>
-                            <span style={{ fontSize: '0.72rem', color: '#10B981', fontWeight: 700, display: 'block' }}>
-                              {ord.paymentMethod}
-                            </span>
-                            <span style={{ fontSize: '0.68rem', color: '#64748B', fontFamily: 'monospace' }}>
-                              Ref: {ord.mpesaRef}
-                            </span>
+                          <td style={{ padding: '0.75rem 1rem' }}>
+                            <span style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: 700, display: 'block' }}>{ord.paymentMethod}</span>
+                            <span style={{ fontSize: '0.65rem', color: '#64748B', fontFamily: 'monospace' }}>{ord.mpesaRef}</span>
                           </td>
-
-                          {/* Status Dropdown */}
-                          <td style={{ padding: '0.85rem 1rem' }}>
+                          <td style={{ padding: '0.75rem 1rem' }}>
                             <select
                               value={ord.status}
                               onChange={(e) => handleUpdateOrderStatus(ord.id, e.target.value)}
@@ -1642,8 +1799,8 @@ export default function AdminPanel({
                                 border: `1px solid ${statusColor}`,
                                 color: statusColor,
                                 borderRadius: '6px',
-                                padding: '0.25rem 0.5rem',
-                                fontSize: '0.75rem',
+                                padding: '0.2rem 0.45rem',
+                                fontSize: '0.72rem',
                                 fontWeight: 700
                               }}
                             >
@@ -1654,20 +1811,13 @@ export default function AdminPanel({
                               <option value="Cancelled">Cancelled</option>
                             </select>
                           </td>
-
-                          {/* Actions */}
-                          <td style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>
+                          <td style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>
                             <button
                               onClick={() => setSelectedOrderDetails(ord)}
                               className="btn btn-sm btn-outline"
-                              style={{
-                                borderColor: 'rgba(30, 107, 255, 0.4)',
-                                color: '#60A5FA',
-                                padding: '0.35rem 0.75rem',
-                                fontSize: '0.75rem'
-                              }}
+                              style={{ borderColor: 'rgba(30, 107, 255, 0.4)', color: '#60A5FA', padding: '0.3rem 0.65rem', fontSize: '0.72rem' }}
                             >
-                              <Eye size={13} style={{ marginRight: '4px' }} />
+                              <Eye size={12} style={{ marginRight: '3px' }} />
                               View
                             </button>
                           </td>
@@ -1685,55 +1835,120 @@ export default function AdminPanel({
         {/* TAB 4: CONSULTATIONS & SERVICE REQUESTS */}
         {/* -------------------------------------------------- */}
         {activeTab === 'services' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', width: '100%' }}>
             <div className="card-glass" style={{
               backgroundColor: '#071226',
               border: '1px solid rgba(16, 185, 129, 0.35)',
               borderRadius: '16px',
-              padding: '1.25rem',
+              padding: '1rem',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
               flexWrap: 'wrap',
-              gap: '1rem'
+              gap: '0.75rem',
+              boxSizing: 'border-box',
+              width: '100%'
             }}>
               <div>
-                <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
-                  Farmer Clinical & Agronomy Service Requests
+                <h2 style={{ fontSize: 'clamp(1.1rem, 3.5vw, 1.3rem)', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
+                  Farmer Clinical & Agronomy Requests
                 </h2>
-                <p style={{ fontSize: '0.825rem', color: '#94A3B8', margin: '0.25rem 0 0 0' }}>
-                  Manage incoming cases for Dr. Peter Karanja (Vet) and Faith Wambui (Agronomist).
+                <p style={{ fontSize: '0.785rem', color: '#94A3B8', margin: '0.2rem 0 0 0' }}>
+                  Manage cases for Dr. Peter Karanja (Vet) and Faith Wambui (Agronomist).
                 </p>
               </div>
 
               <button
                 onClick={() => setIsNewServiceOpen(true)}
                 className="btn btn-primary"
-                style={{ padding: '0.6rem 1.25rem', fontSize: '0.85rem', fontWeight: 700, gap: '0.45rem' }}
+                style={{ padding: '0.55rem 1rem', fontSize: '0.8rem', fontWeight: 700, gap: '0.35rem' }}
               >
-                <Plus size={16} />
-                <span>Log New Service Booking</span>
+                <Plus size={15} />
+                <span>Log Service Case</span>
               </button>
             </div>
 
-            {/* Service Requests Table */}
-            <div className="card-glass" style={{
+            {/* RESPONSIVE SERVICES VIEW */}
+            {/* 1. Mobile Cards */}
+            <div className="mobile-services-cards" style={{ display: 'none', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
+              {filteredServices.map((srv) => (
+                <div key={srv.id} style={{
+                  backgroundColor: '#071228',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '12px',
+                  padding: '0.85rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  boxSizing: 'border-box',
+                  width: '100%'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 800, color: '#FFFFFF', fontFamily: 'monospace', fontSize: '0.825rem' }}>
+                      {srv.id}
+                    </span>
+                    <select
+                      value={srv.status}
+                      onChange={(e) => handleUpdateServiceStatus(srv.id, e.target.value)}
+                      style={{
+                        backgroundColor: '#040B1A',
+                        border: '1px solid #10B981',
+                        color: '#10B981',
+                        borderRadius: '6px',
+                        padding: '0.2rem 0.45rem',
+                        fontSize: '0.72rem',
+                        fontWeight: 700
+                      }}
+                    >
+                      <option value="New Request">New Request</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Prescription Issued">Prescription</option>
+                      <option value="Visit Completed">Visit Done</option>
+                      <option value="Completed">Completed</option>
+                    </select>
+                  </div>
+
+                  <div style={{ fontSize: '0.785rem', color: '#E2E8F0' }}>
+                    <strong>{srv.farmerName}</strong> • <span style={{ color: '#94A3B8' }}>{srv.county} ({srv.phone})</span>
+                  </div>
+
+                  <div style={{ fontSize: '0.72rem', color: '#60A5FA', fontWeight: 600 }}>
+                    {srv.serviceType} ({srv.assignedSpecialist})
+                  </div>
+
+                  <div style={{ fontSize: '0.72rem', color: '#CBD5E1', overflowWrap: 'anywhere' }}>
+                    {srv.issue}
+                  </div>
+
+                  <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)', paddingTop: '0.4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.68rem', color: '#64748B' }}>Service Fee</span>
+                    <span style={{ fontWeight: 800, color: '#F5C542', fontFamily: 'var(--font-display)', fontSize: '0.95rem' }}>
+                      KES {srv.fee?.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* 2. Desktop Table */}
+            <div className="desktop-services-table card-glass" style={{
               backgroundColor: '#071226',
               border: '1px solid rgba(255, 255, 255, 0.08)',
               borderRadius: '16px',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              width: '100%'
             }}>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.825rem' }}>
+              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
+                <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.8rem' }}>
                   <thead>
                     <tr style={{ backgroundColor: '#09152E', color: '#10B981', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                      <th style={{ padding: '0.85rem 1rem' }}>Booking ID</th>
-                      <th style={{ padding: '0.85rem 1rem' }}>Farmer Details</th>
-                      <th style={{ padding: '0.85rem 1rem' }}>Service Type</th>
-                      <th style={{ padding: '0.85rem 1rem' }}>Assigned Specialist</th>
-                      <th style={{ padding: '0.85rem 1rem' }}>Farmer Problem Notes</th>
-                      <th style={{ padding: '0.85rem 1rem' }}>Fee (KES)</th>
-                      <th style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>Status</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Booking ID</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Farmer</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Service Type</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Specialist</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Case Notes</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Fee</th>
+                      <th style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1745,26 +1960,18 @@ export default function AdminPanel({
                           backgroundColor: idx % 2 === 0 ? 'rgba(5, 11, 24, 0.6)' : 'rgba(7, 18, 38, 0.3)'
                         }}
                       >
-                        <td style={{ padding: '0.85rem 1rem', fontFamily: 'monospace', fontWeight: 800, color: '#FFFFFF' }}>
-                          {srv.id}
-                        </td>
-                        <td style={{ padding: '0.85rem 1rem' }}>
+                        <td style={{ padding: '0.75rem 1rem', fontFamily: 'monospace', fontWeight: 800, color: '#FFFFFF' }}>{srv.id}</td>
+                        <td style={{ padding: '0.75rem 1rem' }}>
                           <div style={{ fontWeight: 700, color: '#FFFFFF' }}>{srv.farmerName}</div>
-                          <div style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{srv.county} • {srv.phone}</div>
+                          <div style={{ fontSize: '0.68rem', color: '#94A3B8' }}>{srv.county}</div>
                         </td>
-                        <td style={{ padding: '0.85rem 1rem', color: '#60A5FA', fontWeight: 600 }}>
-                          {srv.serviceType}
-                        </td>
-                        <td style={{ padding: '0.85rem 1rem', color: '#E2E8F0' }}>
-                          {srv.assignedSpecialist}
-                        </td>
-                        <td style={{ padding: '0.85rem 1rem', maxWidth: '280px', color: '#CBD5E1', fontSize: '0.785rem' }}>
-                          {srv.issue}
-                        </td>
-                        <td style={{ padding: '0.85rem 1rem', fontWeight: 800, color: '#F5C542', fontFamily: 'var(--font-display)' }}>
+                        <td style={{ padding: '0.75rem 1rem', color: '#60A5FA', fontWeight: 600 }}>{srv.serviceType}</td>
+                        <td style={{ padding: '0.75rem 1rem', color: '#E2E8F0' }}>{srv.assignedSpecialist}</td>
+                        <td style={{ padding: '0.75rem 1rem', maxWidth: '200px', color: '#CBD5E1', fontSize: '0.72rem' }}>{srv.issue}</td>
+                        <td style={{ padding: '0.75rem 1rem', fontWeight: 800, color: '#F5C542', fontFamily: 'var(--font-display)' }}>
                           KES {srv.fee?.toLocaleString()}
                         </td>
-                        <td style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>
+                        <td style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>
                           <select
                             value={srv.status}
                             onChange={(e) => handleUpdateServiceStatus(srv.id, e.target.value)}
@@ -1773,15 +1980,15 @@ export default function AdminPanel({
                               border: '1px solid #10B981',
                               color: '#10B981',
                               borderRadius: '6px',
-                              padding: '0.25rem 0.5rem',
-                              fontSize: '0.75rem',
+                              padding: '0.2rem 0.45rem',
+                              fontSize: '0.72rem',
                               fontWeight: 700
                             }}
                           >
                             <option value="New Request">New Request</option>
                             <option value="In Progress">In Progress</option>
-                            <option value="Prescription Issued">Prescription Issued</option>
-                            <option value="Visit Completed">Visit Completed</option>
+                            <option value="Prescription Issued">Prescription</option>
+                            <option value="Visit Completed">Visit Done</option>
                             <option value="Completed">Completed</option>
                           </select>
                         </td>
@@ -1798,31 +2005,32 @@ export default function AdminPanel({
         {/* TAB 5: SETTINGS & COMPLIANCE TOOLS */}
         {/* -------------------------------------------------- */}
         {activeTab === 'settings' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '1rem', width: '100%' }}>
             <div className="card-glass" style={{
               backgroundColor: '#071226',
               border: '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: '16px',
-              padding: '1.5rem'
+              padding: '1.25rem',
+              boxSizing: 'border-box'
             }}>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FFFFFF', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#FFFFFF', marginBottom: '0.85rem' }}>
                 Agrovet Operating Licenses
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.85rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <span style={{ color: '#94A3B8' }}>PCPB Agrovet Registration:</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', fontSize: '0.8rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <span style={{ color: '#94A3B8' }}>PCPB Agrovet Lic:</span>
                   <span style={{ color: '#10B981', fontWeight: 700 }}>PCPB/DIS/2026/0922</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <span style={{ color: '#94A3B8' }}>KVB Veterinary Practice:</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <span style={{ color: '#94A3B8' }}>KVB Veterinary Lic:</span>
                   <span style={{ color: '#10B981', fontWeight: 700 }}>KVB-2104-NBO-VALID</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <span style={{ color: '#94A3B8' }}>Safaricom M-Pesa Paybill:</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <span style={{ color: '#94A3B8' }}>M-Pesa Paybill:</span>
                   <span style={{ color: '#F5C542', fontWeight: 700 }}>882991 (Acc: FARMER)</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0' }}>
-                  <span style={{ color: '#94A3B8' }}>WhatsApp 24/7 Hotline:</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0' }}>
+                  <span style={{ color: '#94A3B8' }}>Hotline:</span>
                   <span style={{ color: '#25D366', fontWeight: 700 }}>+254 700 123 456</span>
                 </div>
               </div>
@@ -1832,29 +2040,30 @@ export default function AdminPanel({
               backgroundColor: '#071226',
               border: '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: '16px',
-              padding: '1.5rem'
+              padding: '1.25rem',
+              boxSizing: 'border-box'
             }}>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FFFFFF', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#FFFFFF', marginBottom: '0.85rem' }}>
                 Maintenance & System Reset
               </h3>
-              <p style={{ fontSize: '0.825rem', color: '#94A3B8', marginBottom: '1.25rem' }}>
-                If you ever want to re-seed demo products or restore the original product catalog, use these administrative triggers:
+              <p style={{ fontSize: '0.785rem', color: '#94A3B8', marginBottom: '1rem' }}>
+                Use these administrative triggers to reset demo catalog or download full JSON backups:
               </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
                 <button
                   onClick={onResetDefaultProducts}
                   className="btn btn-outline"
-                  style={{ borderColor: 'rgba(245, 197, 66, 0.4)', color: '#F5C542', justifyContent: 'center' }}
+                  style={{ borderColor: 'rgba(245, 197, 66, 0.4)', color: '#F5C542', justifyContent: 'center', fontSize: '0.8rem' }}
                 >
-                  <RefreshCw size={15} />
+                  <RefreshCw size={14} />
                   <span>Restore Factory Starter Catalog</span>
                 </button>
                 <button
                   onClick={handleExportData}
                   className="btn btn-outline"
-                  style={{ borderColor: 'rgba(30, 107, 255, 0.4)', color: '#60A5FA', justifyContent: 'center' }}
+                  style={{ borderColor: 'rgba(30, 107, 255, 0.4)', color: '#60A5FA', justifyContent: 'center', fontSize: '0.8rem' }}
                 >
-                  <Download size={15} />
+                  <Download size={14} />
                   <span>Download Full Database Export</span>
                 </button>
               </div>
@@ -1864,42 +2073,38 @@ export default function AdminPanel({
       </div>
 
       {/* ==================================================== */}
-      {/* MODAL 1: EDIT PRODUCT DIALOG */}
+      {/* MODAL 1: EDIT PRODUCT DIALOG (RESPONSIVE) */}
       {/* ==================================================== */}
       {editingProduct && (
-        <div className="modal-overlay" onClick={() => setEditingProduct(null)}>
+        <div className="modal-overlay" onClick={() => setEditingProduct(null)} style={{ padding: '0.75rem', boxSizing: 'border-box' }}>
           <div 
             className="card-glass" 
             onClick={(e) => e.stopPropagation()}
             style={{
               backgroundColor: '#0A1733',
               border: '1.5px solid #1E6BFF',
-              borderRadius: '20px',
+              borderRadius: '18px',
               width: '100%',
-              maxWidth: '680px',
+              maxWidth: 'min(640px, 94vw)',
               maxHeight: '90vh',
               overflowY: 'auto',
-              padding: '1.75rem'
+              padding: 'clamp(1rem, 4vw, 1.75rem)',
+              boxSizing: 'border-box'
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFFFFF' }}>
-                Edit Product: {editingProduct.name}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
+                Edit Product
               </h3>
-              <button 
-                onClick={() => setEditingProduct(null)}
-                className="btn btn-icon btn-outline"
-                style={{ width: '32px', height: '32px' }}
-              >
-                <X size={16} />
+              <button onClick={() => setEditingProduct(null)} className="btn btn-icon btn-outline" style={{ width: '30px', height: '30px' }}>
+                <X size={15} />
               </button>
             </div>
 
             <form onSubmit={(e) => {
               e.preventDefault();
               handleSaveProductEdit(editingProduct);
-            }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {/* Name */}
+            }} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
               <div>
                 <label className="form-label">Product Name *</label>
                 <input
@@ -1907,12 +2112,11 @@ export default function AdminPanel({
                   value={editingProduct.name}
                   onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
                   required
-                  style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                  style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                 />
               </div>
 
-              {/* Brand & Category */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '0.75rem' }}>
                 <div>
                   <label className="form-label">Brand / Manufacturer *</label>
                   <input
@@ -1920,7 +2124,7 @@ export default function AdminPanel({
                     value={editingProduct.brand}
                     onChange={(e) => setEditingProduct({ ...editingProduct, brand: e.target.value })}
                     required
-                    style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                    style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
@@ -1928,7 +2132,7 @@ export default function AdminPanel({
                   <select
                     value={editingProduct.category}
                     onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
-                    style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                    style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                   >
                     {CATEGORIES.map(c => (
                       <option key={c.id} value={c.id}>{c.name}</option>
@@ -1937,8 +2141,7 @@ export default function AdminPanel({
                 </div>
               </div>
 
-              {/* Price, Original Price, Stock */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 140px), 1fr))', gap: '0.75rem' }}>
                 <div>
                   <label className="form-label">Selling Price (KES) *</label>
                   <input
@@ -1946,7 +2149,7 @@ export default function AdminPanel({
                     value={editingProduct.price}
                     onChange={(e) => setEditingProduct({ ...editingProduct, price: Number(e.target.value) })}
                     required
-                    style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                    style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
@@ -1955,68 +2158,64 @@ export default function AdminPanel({
                     type="number"
                     value={editingProduct.originalPrice || editingProduct.price}
                     onChange={(e) => setEditingProduct({ ...editingProduct, originalPrice: Number(e.target.value) })}
-                    style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                    style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
-                  <label className="form-label">Stock Units Count *</label>
+                  <label className="form-label">Stock Units *</label>
                   <input
                     type="number"
                     value={editingProduct.stockCount}
                     onChange={(e) => setEditingProduct({ ...editingProduct, stockCount: Number(e.target.value), isLowStock: Number(e.target.value) <= 10 })}
                     required
-                    style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                    style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                   />
                 </div>
               </div>
 
-              {/* Active Ingredient & PCPB Code */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '0.75rem' }}>
                 <div>
                   <label className="form-label">Active Ingredient</label>
                   <input
                     type="text"
                     value={editingProduct.activeIngredient || ''}
                     onChange={(e) => setEditingProduct({ ...editingProduct, activeIngredient: e.target.value })}
-                    style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                    style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
-                  <label className="form-label">Regulatory PCPB / KVB Code</label>
+                  <label className="form-label">PCPB / KVB Code</label>
                   <input
                     type="text"
                     value={editingProduct.complianceCode || ''}
                     onChange={(e) => setEditingProduct({ ...editingProduct, complianceCode: e.target.value })}
-                    style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                    style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                   />
                 </div>
               </div>
 
-              {/* Image URL */}
               <div>
                 <label className="form-label">Image URL</label>
                 <input
                   type="url"
                   value={editingProduct.image}
                   onChange={(e) => setEditingProduct({ ...editingProduct, image: e.target.value })}
-                  style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                  style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                 />
               </div>
 
-              {/* Description */}
               <div>
                 <label className="form-label">Product Description</label>
                 <textarea
-                  rows={3}
+                  rows={2}
                   value={editingProduct.description || ''}
                   onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
-                  style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                  style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                 />
               </div>
 
-              {/* Checkboxes */}
-              <div style={{ display: 'flex', gap: '1.5rem' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', cursor: 'pointer' }}>
                   <input
                     type="checkbox"
                     checked={editingProduct.isBestSeller || false}
@@ -2024,31 +2223,22 @@ export default function AdminPanel({
                   />
                   Best Seller Flag
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', cursor: 'pointer' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', cursor: 'pointer' }}>
                   <input
                     type="checkbox"
                     checked={editingProduct.isRestricted || false}
                     onChange={(e) => setEditingProduct({ ...editingProduct, isRestricted: e.target.checked })}
                   />
-                  Restricted / Regulated
+                  Regulated Product
                 </label>
               </div>
 
-              {/* Submit Buttons */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
-                <button
-                  type="button"
-                  onClick={() => setEditingProduct(null)}
-                  className="btn btn-outline"
-                >
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <button type="button" onClick={() => setEditingProduct(null)} className="btn btn-outline" style={{ fontSize: '0.8rem' }}>
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  style={{ fontWeight: 700 }}
-                >
-                  Save & Apply Changes
+                <button type="submit" className="btn btn-primary" style={{ fontWeight: 700, fontSize: '0.8rem' }}>
+                  Save Changes
                 </button>
               </div>
             </form>
@@ -2057,34 +2247,31 @@ export default function AdminPanel({
       )}
 
       {/* ==================================================== */}
-      {/* MODAL 2: ADD NEW PRODUCT DIALOG */}
+      {/* MODAL 2: ADD NEW PRODUCT DIALOG (RESPONSIVE) */}
       {/* ==================================================== */}
       {isAddProductOpen && (
-        <div className="modal-overlay" onClick={() => setIsAddProductOpen(false)}>
+        <div className="modal-overlay" onClick={() => setIsAddProductOpen(false)} style={{ padding: '0.75rem', boxSizing: 'border-box' }}>
           <div 
             className="card-glass" 
             onClick={(e) => e.stopPropagation()}
             style={{
               backgroundColor: '#0A1733',
               border: '1.5px solid #F5C542',
-              borderRadius: '20px',
+              borderRadius: '18px',
               width: '100%',
-              maxWidth: '680px',
+              maxWidth: 'min(640px, 94vw)',
               maxHeight: '90vh',
               overflowY: 'auto',
-              padding: '1.75rem'
+              padding: 'clamp(1rem, 4vw, 1.75rem)',
+              boxSizing: 'border-box'
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFFFFF' }}>
-                Add New Product to Shop
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
+                Add New Product
               </h3>
-              <button 
-                onClick={() => setIsAddProductOpen(false)}
-                className="btn btn-icon btn-outline"
-                style={{ width: '32px', height: '32px' }}
-              >
-                <X size={16} />
+              <button onClick={() => setIsAddProductOpen(false)} className="btn btn-icon btn-outline" style={{ width: '30px', height: '30px' }}>
+                <X size={15} />
               </button>
             </div>
 
@@ -2106,19 +2293,19 @@ export default function AdminPanel({
                 isRestricted: fd.get('isRestricted') === 'on',
                 packSizes: [{ size: 'Standard Unit', price: Number(fd.get('price')), inStock: true, default: true }]
               });
-            }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            }} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
               <div>
                 <label className="form-label">Product Name *</label>
                 <input
                   type="text"
                   name="name"
                   required
-                  placeholder="e.g. Twiga Milking Salve (500g)"
-                  style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                  placeholder="e.g. Twiga Milking Salve 500g"
+                  style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '0.75rem' }}>
                 <div>
                   <label className="form-label">Brand / Manufacturer *</label>
                   <input
@@ -2126,7 +2313,7 @@ export default function AdminPanel({
                     name="brand"
                     required
                     placeholder="e.g. Twiga Chemical Industries"
-                    style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                    style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
@@ -2134,7 +2321,7 @@ export default function AdminPanel({
                   <select
                     name="category"
                     defaultValue="veterinary-drugs"
-                    style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                    style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                   >
                     {CATEGORIES.map(c => (
                       <option key={c.id} value={c.id}>{c.name}</option>
@@ -2143,15 +2330,15 @@ export default function AdminPanel({
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 140px), 1fr))', gap: '0.75rem' }}>
                 <div>
-                  <label className="form-label">Selling Price (KES) *</label>
+                  <label className="form-label">Price (KES) *</label>
                   <input
                     type="number"
                     name="price"
                     required
                     placeholder="e.g. 850"
-                    style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                    style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
@@ -2160,49 +2347,28 @@ export default function AdminPanel({
                     type="number"
                     name="originalPrice"
                     placeholder="e.g. 950"
-                    style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                    style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
-                  <label className="form-label">Initial Stock Count *</label>
+                  <label className="form-label">Initial Stock *</label>
                   <input
                     type="number"
                     name="stockCount"
                     defaultValue={30}
                     required
-                    style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div>
-                  <label className="form-label">Active Ingredient / Composition</label>
-                  <input
-                    type="text"
-                    name="activeIngredient"
-                    placeholder="e.g. Chlorhexidine + Cetrimide"
-                    style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
-                  />
-                </div>
-                <div>
-                  <label className="form-label">Compliance Code</label>
-                  <input
-                    type="text"
-                    name="complianceCode"
-                    placeholder="e.g. KVB Reg. [KVB/VPR/2026/0411]"
-                    style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                    style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="form-label">Image URL (Unsplash or direct image link)</label>
+                <label className="form-label">Image URL</label>
                 <input
                   type="url"
                   name="image"
                   defaultValue="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80"
-                  style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                  style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                 />
               </div>
 
@@ -2210,37 +2376,29 @@ export default function AdminPanel({
                 <label className="form-label">Description</label>
                 <textarea
                   name="description"
-                  rows={3}
-                  placeholder="Enter detailed description of usage, benefits, and safety warnings for the farmer..."
-                  style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                  rows={2}
+                  placeholder="Usage instructions and benefits..."
+                  style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                 />
               </div>
 
-              <div style={{ display: 'flex', gap: '1.5rem' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', gap: '1.25rem', flexWrap: 'wrap' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', cursor: 'pointer' }}>
                   <input type="checkbox" name="isBestSeller" />
-                  Mark as Best Seller
+                  Best Seller Flag
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', cursor: 'pointer' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', cursor: 'pointer' }}>
                   <input type="checkbox" name="isRestricted" />
                   Regulated Product
                 </label>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
-                <button
-                  type="button"
-                  onClick={() => setIsAddProductOpen(false)}
-                  className="btn btn-outline"
-                >
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <button type="button" onClick={() => setIsAddProductOpen(false)} className="btn btn-outline" style={{ fontSize: '0.8rem' }}>
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  style={{ fontWeight: 700 }}
-                >
-                  Publish Product to Shop
+                <button type="submit" className="btn btn-primary" style={{ fontWeight: 700, fontSize: '0.8rem' }}>
+                  Publish Product
                 </button>
               </div>
             </form>
@@ -2249,39 +2407,36 @@ export default function AdminPanel({
       )}
 
       {/* ==================================================== */}
-      {/* MODAL 3: ORDER DETAILS & RECEIPT DIALOG */}
+      {/* MODAL 3: ORDER DETAILS & RECEIPT DIALOG (RESPONSIVE) */}
       {/* ==================================================== */}
       {selectedOrderDetails && (
-        <div className="modal-overlay" onClick={() => setSelectedOrderDetails(null)}>
+        <div className="modal-overlay" onClick={() => setSelectedOrderDetails(null)} style={{ padding: '0.75rem', boxSizing: 'border-box' }}>
           <div 
             className="card-glass" 
             onClick={(e) => e.stopPropagation()}
             style={{
               backgroundColor: '#0A1733',
               border: '1.5px solid #1E6BFF',
-              borderRadius: '20px',
+              borderRadius: '18px',
               width: '100%',
-              maxWidth: '620px',
+              maxWidth: 'min(580px, 94vw)',
               maxHeight: '90vh',
               overflowY: 'auto',
-              padding: '1.75rem'
+              padding: 'clamp(1rem, 4vw, 1.5rem)',
+              boxSizing: 'border-box'
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem', marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.75rem', marginBottom: '1rem' }}>
               <div>
-                <div style={{ fontSize: '0.75rem', color: '#60A5FA', textTransform: 'uppercase', fontWeight: 700 }}>
-                  Official Agrovet Ltd Sales Invoice
+                <div style={{ fontSize: '0.7rem', color: '#60A5FA', textTransform: 'uppercase', fontWeight: 700 }}>
+                  Agrovet Ltd Invoice
                 </div>
-                <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#FFFFFF', margin: '0.2rem 0 0 0' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#FFFFFF', margin: '0.15rem 0 0 0' }}>
                   {selectedOrderDetails.id}
                 </h3>
               </div>
-              <button 
-                onClick={() => setSelectedOrderDetails(null)}
-                className="btn btn-icon btn-outline"
-                style={{ width: '32px', height: '32px' }}
-              >
-                <X size={16} />
+              <button onClick={() => setSelectedOrderDetails(null)} className="btn btn-icon btn-outline" style={{ width: '30px', height: '30px' }}>
+                <X size={15} />
               </button>
             </div>
 
@@ -2289,53 +2444,51 @@ export default function AdminPanel({
             <div style={{
               backgroundColor: '#050E22',
               border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: '12px',
-              padding: '1rem',
-              marginBottom: '1.25rem',
+              borderRadius: '10px',
+              padding: '0.85rem',
+              marginBottom: '1rem',
               display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '0.75rem',
-              fontSize: '0.8rem'
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))',
+              gap: '0.5rem',
+              fontSize: '0.78rem'
             }}>
               <div>
-                <span style={{ color: '#64748B', display: 'block' }}>Farmer Name:</span>
+                <span style={{ color: '#64748B', display: 'block' }}>Farmer:</span>
                 <strong style={{ color: '#FFFFFF' }}>{selectedOrderDetails.customerName}</strong>
               </div>
               <div>
-                <span style={{ color: '#64748B', display: 'block' }}>Phone / WhatsApp:</span>
+                <span style={{ color: '#64748B', display: 'block' }}>Phone:</span>
                 <strong style={{ color: '#F5C542' }}>{selectedOrderDetails.phone}</strong>
               </div>
               <div>
-                <span style={{ color: '#64748B', display: 'block' }}>Delivery Location:</span>
-                <span style={{ color: '#E2E8F0' }}>{selectedOrderDetails.county} ({selectedOrderDetails.town || 'Farmgate'})</span>
+                <span style={{ color: '#64748B', display: 'block' }}>County:</span>
+                <span style={{ color: '#E2E8F0' }}>{selectedOrderDetails.county}</span>
               </div>
               <div>
-                <span style={{ color: '#64748B', display: 'block' }}>M-Pesa Reference:</span>
+                <span style={{ color: '#64748B', display: 'block' }}>M-Pesa Ref:</span>
                 <span style={{ color: '#10B981', fontFamily: 'monospace', fontWeight: 700 }}>{selectedOrderDetails.mpesaRef}</span>
               </div>
             </div>
 
-            {/* Order Items Table */}
-            <div style={{ marginBottom: '1.25rem' }}>
-              <div style={{ fontSize: '0.825rem', fontWeight: 700, color: '#60A5FA', marginBottom: '0.5rem' }}>
-                Purchased Agricultural Inputs
+            {/* Order Items */}
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#60A5FA', marginBottom: '0.4rem' }}>
+                Purchased Inputs
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                 {selectedOrderDetails.items?.map((it, i) => (
                   <div key={i} style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    padding: '0.65rem 0.85rem',
+                    padding: '0.55rem 0.75rem',
                     backgroundColor: '#040B1A',
-                    borderRadius: '8px',
-                    fontSize: '0.825rem'
+                    borderRadius: '6px',
+                    fontSize: '0.78rem'
                   }}>
                     <div>
                       <div style={{ fontWeight: 700, color: '#FFFFFF' }}>{it.name}</div>
-                      <div style={{ fontSize: '0.72rem', color: '#64748B' }}>
-                        {it.pack || 'Unit'} • Qty: {it.qty}
-                      </div>
+                      <div style={{ fontSize: '0.68rem', color: '#64748B' }}>Qty: {it.qty}</div>
                     </div>
                     <div style={{ fontWeight: 800, color: '#F5C542' }}>
                       KES {((it.price || 0) * (it.qty || 1)).toLocaleString()}
@@ -2345,29 +2498,16 @@ export default function AdminPanel({
               </div>
             </div>
 
-            {/* Total Row */}
-            <div style={{
-              borderTop: '1px solid rgba(255,255,255,0.1)',
-              paddingTop: '0.85rem',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '1.5rem'
-            }}>
-              <span style={{ fontSize: '0.9rem', color: '#94A3B8' }}>Total Paid via M-Pesa:</span>
-              <span style={{ fontSize: '1.45rem', fontWeight: 800, color: '#F5C542', fontFamily: 'var(--font-display)' }}>
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <span style={{ fontSize: '0.85rem', color: '#94A3B8' }}>Total Paid:</span>
+              <span style={{ fontSize: '1.35rem', fontWeight: 800, color: '#F5C542', fontFamily: 'var(--font-display)' }}>
                 KES {selectedOrderDetails.total?.toLocaleString()}
               </span>
             </div>
 
-            {/* Actions: Print & WhatsApp dispatch notice */}
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <button
-                onClick={() => window.print()}
-                className="btn btn-outline"
-                style={{ flex: 1, justifyContent: 'center', borderColor: 'rgba(255,255,255,0.2)', color: '#CBD5E1' }}
-              >
-                <Printer size={15} />
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button onClick={() => window.print()} className="btn btn-outline" style={{ flex: '1 1 auto', justifyContent: 'center', fontSize: '0.8rem' }}>
+                <Printer size={14} />
                 <span>Print Invoice</span>
               </button>
               <button
@@ -2381,10 +2521,10 @@ export default function AdminPanel({
                   window.open(`https://wa.me/${selectedOrderDetails.phone.replace(/[^0-9]/g, '')}?text=${text}`, '_blank');
                 }}
                 className="btn btn-primary"
-                style={{ flex: 1, justifyContent: 'center' }}
+                style={{ flex: '1 1 auto', justifyContent: 'center', fontSize: '0.8rem' }}
               >
-                <MessageCircle size={15} />
-                <span>Send WhatsApp Notice</span>
+                <MessageCircle size={14} />
+                <span>WhatsApp Notice</span>
               </button>
             </div>
           </div>
@@ -2395,7 +2535,7 @@ export default function AdminPanel({
       {/* MODAL 4: DELETE CONFIRMATION */}
       {/* ==================================================== */}
       {deleteConfirmId && (
-        <div className="modal-overlay" onClick={() => setDeleteConfirmId(null)}>
+        <div className="modal-overlay" onClick={() => setDeleteConfirmId(null)} style={{ padding: '0.75rem', boxSizing: 'border-box' }}>
           <div 
             className="card-glass" 
             onClick={(e) => e.stopPropagation()}
@@ -2404,42 +2544,27 @@ export default function AdminPanel({
               border: '1.5px solid #EF4444',
               borderRadius: '16px',
               width: '100%',
-              maxWidth: '420px',
-              padding: '1.5rem',
-              textAlign: 'center'
+              maxWidth: '380px',
+              padding: '1.25rem',
+              textAlign: 'center',
+              boxSizing: 'border-box'
             }}
           >
-            <div style={{
-              width: '50px',
-              height: '50px',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(239, 68, 68, 0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 1rem auto'
-            }}>
-              <AlertTriangle size={24} color="#EF4444" />
+            <div style={{ width: '42px', height: '42px', borderRadius: '50%', backgroundColor: 'rgba(239, 68, 68, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem auto' }}>
+              <AlertTriangle size={20} color="#EF4444" />
             </div>
-            <h4 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FFFFFF', marginBottom: '0.5rem' }}>
+            <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#FFFFFF', marginBottom: '0.35rem' }}>
               Confirm Product Deletion?
             </h4>
-            <p style={{ fontSize: '0.825rem', color: '#94A3B8', marginBottom: '1.25rem' }}>
-              This item will be immediately removed from the customer storefront catalog.
+            <p style={{ fontSize: '0.785rem', color: '#94A3B8', marginBottom: '1rem' }}>
+              This item will be removed immediately from the live shop catalog.
             </p>
-            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
-              <button
-                onClick={() => setDeleteConfirmId(null)}
-                className="btn btn-outline"
-              >
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+              <button onClick={() => setDeleteConfirmId(null)} className="btn btn-outline" style={{ fontSize: '0.8rem' }}>
                 Cancel
               </button>
-              <button
-                onClick={() => handleDeleteProduct(deleteConfirmId)}
-                className="btn btn-primary"
-                style={{ backgroundColor: '#EF4444', borderColor: '#EF4444', color: '#FFFFFF' }}
-              >
-                Yes, Delete Item
+              <button onClick={() => handleDeleteProduct(deleteConfirmId)} className="btn btn-primary" style={{ backgroundColor: '#EF4444', borderColor: '#EF4444', color: '#FFFFFF', fontSize: '0.8rem' }}>
+                Delete
               </button>
             </div>
           </div>
@@ -2450,29 +2575,26 @@ export default function AdminPanel({
       {/* MODAL 5: LOG DIRECT WALK-IN SALE */}
       {/* ==================================================== */}
       {isNewSaleOpen && (
-        <div className="modal-overlay" onClick={() => setIsNewSaleOpen(false)}>
+        <div className="modal-overlay" onClick={() => setIsNewSaleOpen(false)} style={{ padding: '0.75rem', boxSizing: 'border-box' }}>
           <div 
             className="card-glass" 
             onClick={(e) => e.stopPropagation()}
             style={{
               backgroundColor: '#0A1733',
               border: '1.5px solid #F5C542',
-              borderRadius: '20px',
+              borderRadius: '18px',
               width: '100%',
-              maxWidth: '540px',
-              padding: '1.75rem'
+              maxWidth: 'min(520px, 94vw)',
+              padding: 'clamp(1rem, 4vw, 1.5rem)',
+              boxSizing: 'border-box'
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFFFFF' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
                 Log Direct Walk-In Sale
               </h3>
-              <button 
-                onClick={() => setIsNewSaleOpen(false)}
-                className="btn btn-icon btn-outline"
-                style={{ width: '32px', height: '32px' }}
-              >
-                <X size={16} />
+              <button onClick={() => setIsNewSaleOpen(false)} className="btn btn-icon btn-outline" style={{ width: '30px', height: '30px' }}>
+                <X size={15} />
               </button>
             </div>
 
@@ -2496,28 +2618,25 @@ export default function AdminPanel({
                 town: 'Agrovet Counter',
                 paymentMethod: fd.get('paymentMethod'),
                 mpesaRef: mpesaRef,
-                items: [
-                  {
-                    id: selectedProd.id,
-                    name: selectedProd.name,
-                    brand: selectedProd.brand,
-                    pack: 'Counter Pickup',
-                    qty: qty,
-                    price: selectedProd.price,
-                    total: totalAmount
-                  }
-                ],
+                items: [{
+                  id: selectedProd.id,
+                  name: selectedProd.name,
+                  brand: selectedProd.brand,
+                  pack: 'Counter Pickup',
+                  qty: qty,
+                  price: selectedProd.price,
+                  total: totalAmount
+                }],
                 subtotal: totalAmount,
                 deliveryFee: 0,
                 total: totalAmount
               };
 
               setOrders(prev => [newSale, ...prev]);
-              // Deduct stock
               handleQuickStockAdjust(selectedProd.id, -qty);
               setIsNewSaleOpen(false);
               showToast(`Sale recorded! Ref: ${orderId}`);
-            }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            }} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
               <div>
                 <label className="form-label">Customer / Farmer Name *</label>
                 <input
@@ -2525,11 +2644,11 @@ export default function AdminPanel({
                   name="farmerName"
                   required
                   placeholder="e.g. John Kinyua"
-                  style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                  style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))', gap: '0.75rem' }}>
                 <div>
                   <label className="form-label">Phone Number *</label>
                   <input
@@ -2537,14 +2656,14 @@ export default function AdminPanel({
                     name="phone"
                     required
                     placeholder="+254 7XX XXX XXX"
-                    style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                    style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
                   <label className="form-label">Payment Method *</label>
                   <select
                     name="paymentMethod"
-                    style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                    style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                   >
                     <option value="M-Pesa Till / Paybill">M-Pesa Till / Paybill</option>
                     <option value="Cash Counter">Cash Counter</option>
@@ -2557,7 +2676,7 @@ export default function AdminPanel({
                 <label className="form-label">Select Product *</label>
                 <select
                   name="productId"
-                  style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                  style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                 >
                   {products.map(p => (
                     <option key={p.id} value={p.id}>
@@ -2575,24 +2694,16 @@ export default function AdminPanel({
                   min={1}
                   defaultValue={1}
                   required
-                  style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                  style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
-                <button
-                  type="button"
-                  onClick={() => setIsNewSaleOpen(false)}
-                  className="btn btn-outline"
-                >
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <button type="button" onClick={() => setIsNewSaleOpen(false)} className="btn btn-outline" style={{ fontSize: '0.8rem' }}>
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  style={{ fontWeight: 700 }}
-                >
-                  Confirm Sale & Deduct Stock
+                <button type="submit" className="btn btn-primary" style={{ fontWeight: 700, fontSize: '0.8rem' }}>
+                  Confirm Sale
                 </button>
               </div>
             </form>
@@ -2604,29 +2715,26 @@ export default function AdminPanel({
       {/* MODAL 6: LOG NEW SERVICE BOOKING */}
       {/* ==================================================== */}
       {isNewServiceOpen && (
-        <div className="modal-overlay" onClick={() => setIsNewServiceOpen(false)}>
+        <div className="modal-overlay" onClick={() => setIsNewServiceOpen(false)} style={{ padding: '0.75rem', boxSizing: 'border-box' }}>
           <div 
             className="card-glass" 
             onClick={(e) => e.stopPropagation()}
             style={{
               backgroundColor: '#0A1733',
               border: '1.5px solid #10B981',
-              borderRadius: '20px',
+              borderRadius: '18px',
               width: '100%',
-              maxWidth: '540px',
-              padding: '1.75rem'
+              maxWidth: 'min(520px, 94vw)',
+              padding: 'clamp(1rem, 4vw, 1.5rem)',
+              boxSizing: 'border-box'
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFFFFF' }}>
-                Log Veterinary / Agronomy Service
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
+                Log Clinical / Agronomy Case
               </h3>
-              <button 
-                onClick={() => setIsNewServiceOpen(false)}
-                className="btn btn-icon btn-outline"
-                style={{ width: '32px', height: '32px' }}
-              >
-                <X size={16} />
+              <button onClick={() => setIsNewServiceOpen(false)} className="btn btn-icon btn-outline" style={{ width: '30px', height: '30px' }}>
+                <X size={15} />
               </button>
             </div>
 
@@ -2649,7 +2757,7 @@ export default function AdminPanel({
               setServices(prev => [newBooking, ...prev]);
               setIsNewServiceOpen(false);
               showToast('Service case recorded!');
-            }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            }} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
               <div>
                 <label className="form-label">Farmer Name *</label>
                 <input
@@ -2657,11 +2765,11 @@ export default function AdminPanel({
                   name="farmerName"
                   required
                   placeholder="e.g. Mary Wanjiku"
-                  style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                  style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))', gap: '0.75rem' }}>
                 <div>
                   <label className="form-label">Phone *</label>
                   <input
@@ -2669,7 +2777,7 @@ export default function AdminPanel({
                     name="phone"
                     required
                     placeholder="+254 7XX XXX XXX"
-                    style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                    style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
@@ -2679,72 +2787,64 @@ export default function AdminPanel({
                     name="county"
                     defaultValue="Kiambu County"
                     required
-                    style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                    style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                   />
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))', gap: '0.75rem' }}>
                 <div>
                   <label className="form-label">Service Type *</label>
                   <select
                     name="serviceType"
-                    style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                    style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                   >
-                    <option value="On-Farm Clinical Vet Visit">On-Farm Clinical Vet Visit</option>
-                    <option value="24/7 Digital WhatsApp Telehealth">24/7 Digital WhatsApp Telehealth</option>
-                    <option value="Agronomy Soil Testing & Fertility Audit">Agronomy Soil Testing & Audit</option>
-                    <option value="Herd Vaccination & AI Protocol">Herd Vaccination & AI Protocol</option>
+                    <option value="On-Farm Clinical Vet Visit">Clinical Vet Visit</option>
+                    <option value="24/7 Digital WhatsApp Telehealth">WhatsApp Telehealth</option>
+                    <option value="Agronomy Soil Testing & Fertility Audit">Soil Testing Audit</option>
+                    <option value="Herd Vaccination & AI Protocol">Vaccination Drive</option>
                   </select>
                 </div>
                 <div>
-                  <label className="form-label">Assigned Specialist</label>
+                  <label className="form-label">Specialist</label>
                   <select
                     name="assignedSpecialist"
-                    style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                    style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                   >
-                    <option value="Dr. Peter Karanja (KVB Vet)">Dr. Peter Karanja (KVB Vet)</option>
-                    <option value="Faith Wambui (PCPB Agronomist)">Faith Wambui (PCPB Agronomist)</option>
-                    <option value="Mobile Veterinary Unit">Mobile Veterinary Unit</option>
+                    <option value="Dr. Peter Karanja (KVB Vet)">Dr. Peter (Vet)</option>
+                    <option value="Faith Wambui (PCPB Agronomist)">Faith (Agronomist)</option>
+                    <option value="Mobile Veterinary Unit">Mobile Vet Unit</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="form-label">Service Fee (KES) *</label>
+                <label className="form-label">Fee (KES) *</label>
                 <input
                   type="number"
                   name="fee"
                   defaultValue={3000}
                   required
-                  style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                  style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                 />
               </div>
 
               <div>
-                <label className="form-label">Clinical / Agronomy Case Notes</label>
+                <label className="form-label">Case Notes</label>
                 <textarea
                   name="issue"
-                  rows={3}
-                  placeholder="Describe farm problem, symptoms, animal counts, or crop block..."
-                  style={{ width: '100%', padding: '0.65rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff' }}
+                  rows={2}
+                  placeholder="Describe farm issue, animal count, or crop block..."
+                  style={{ width: '100%', padding: '0.6rem', backgroundColor: '#040B1A', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', boxSizing: 'border-box' }}
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
-                <button
-                  type="button"
-                  onClick={() => setIsNewServiceOpen(false)}
-                  className="btn btn-outline"
-                >
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <button type="button" onClick={() => setIsNewServiceOpen(false)} className="btn btn-outline" style={{ fontSize: '0.8rem' }}>
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  style={{ fontWeight: 700 }}
-                >
-                  Confirm & Log Inflow
+                <button type="submit" className="btn btn-primary" style={{ fontWeight: 700, fontSize: '0.8rem' }}>
+                  Log Case
                 </button>
               </div>
             </form>
@@ -2756,26 +2856,39 @@ export default function AdminPanel({
       {adminToast && (
         <div style={{
           position: 'fixed',
-          bottom: '24px',
-          right: '24px',
+          bottom: '20px',
+          right: '20px',
           backgroundColor: '#0A1733',
           border: '1.5px solid #F5C542',
           color: '#FFFFFF',
           borderRadius: '10px',
-          padding: '0.85rem 1.4rem',
+          padding: '0.75rem 1.25rem',
           boxShadow: '0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(245, 197, 66, 0.4)',
           zIndex: 1100,
           fontWeight: 700,
-          fontSize: '0.875rem',
+          fontSize: '0.8rem',
           display: 'flex',
           alignItems: 'center',
-          gap: '0.5rem',
-          animation: 'slideUp 0.2s ease-out'
+          gap: '0.5rem'
         }}>
           <span style={{ color: '#10B981' }}>✓</span>
           <span>{adminToast}</span>
         </div>
       )}
+
+      {/* Mobile Display Responsive CSS Rules */}
+      <style>{`
+        @media (max-width: 768px) {
+          .desktop-inventory-table { display: none !important; }
+          .mobile-inventory-cards { display: flex !important; }
+          
+          .desktop-orders-table { display: none !important; }
+          .mobile-orders-cards { display: flex !important; }
+          
+          .desktop-services-table { display: none !important; }
+          .mobile-services-cards { display: flex !important; }
+        }
+      `}</style>
     </div>
   );
 }
