@@ -4,27 +4,32 @@ import { REVIEWS } from '../data/reviews';
 
 export default function ReviewsSection() {
   return (
-    <section style={{
+    <section className="reviews-section" style={{
       padding: '5rem 0',
       backgroundColor: '#050B18',
       position: 'relative'
     }}>
       <div className="container">
         {/* Header */}
-        <div style={{ textAlign: 'center', maxWidth: '720px', margin: '0 auto 3.5rem auto' }}>
+        <div className="section-header" style={{ textAlign: 'center', maxWidth: '720px', margin: '0 auto 3.5rem auto' }}>
           <span className="badge badge-gold" style={{ marginBottom: '0.85rem' }}>
             ★ Verified Farmer Testimonials
           </span>
-          <h2 style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.75rem)', fontWeight: 800, color: '#FFFFFF', marginBottom: '0.85rem' }}>
+          <h2 className="section-title" style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.75rem)', fontWeight: 800, color: '#FFFFFF', marginBottom: '0.85rem' }}>
             Trusted by Commercial & Smallholder <span className="text-gradient-gold">Farmers Across Kenya</span>
           </h2>
-          <p style={{ color: '#94A3B8', fontSize: '1.05rem' }}>
+          <p className="section-desc" style={{ color: '#94A3B8', fontSize: '1.05rem' }}>
             Read how authentic sealed inputs and on-demand agro-vet advice have protected harvests and milk yields.
           </p>
         </div>
 
-        {/* Reviews Grid */}
-        <div style={{
+        {/* Mobile Swipe Indicator */}
+        <div className="mobile-swipe-hint">
+          <span>← Swipe reviews →</span>
+        </div>
+
+        {/* Reviews Grid (Horizontal Scroll-Snap Carousel on Mobile) */}
+        <div className="reviews-grid" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: '1.5rem'
@@ -32,7 +37,7 @@ export default function ReviewsSection() {
           {REVIEWS.map(rev => (
             <div 
               key={rev.id}
-              className="card-glass"
+              className="card-glass review-card"
               style={{
                 padding: '1.75rem',
                 backgroundColor: 'rgba(10, 23, 51, 0.85)',

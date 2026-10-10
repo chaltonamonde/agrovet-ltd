@@ -7,13 +7,13 @@ export default function AskExpertCTA({ onOpenConsultation }) {
   };
 
   return (
-    <section style={{
+    <section className="ask-expert-section" style={{
       padding: '4rem 0',
       position: 'relative'
     }}>
       <div className="container">
         <div 
-          className="card-glass border-glow-blue"
+          className="card-glass border-glow-blue ask-expert-card"
           style={{
             padding: '3rem 2rem',
             borderRadius: '24px',
@@ -47,7 +47,7 @@ export default function AskExpertCTA({ onOpenConsultation }) {
               <span>15-Minute Clinical Response Guarantee</span>
             </div>
 
-            <h3 style={{
+            <h3 className="section-title" style={{
               fontSize: 'clamp(1.6rem, 3vw, 2.4rem)',
               fontWeight: 800,
               color: '#FFFFFF',
@@ -58,7 +58,7 @@ export default function AskExpertCTA({ onOpenConsultation }) {
               <span className="text-gradient-gold">Ask Our Licensed Doctors.</span>
             </h3>
 
-            <p style={{ color: '#E2E8F0', fontSize: '1rem', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+            <p className="section-desc" style={{ color: '#E2E8F0', fontSize: '1rem', lineHeight: 1.6, marginBottom: '1.25rem' }}>
               Misdiagnosing a crop blight or administering the wrong antibiotic dosage can cost you entire harvest yields or livestock. Connect with Dr. Peter Karanja (BVM) and Faith Muthoni (MSc Crop Protection).
             </p>
 
@@ -70,7 +70,7 @@ export default function AskExpertCTA({ onOpenConsultation }) {
           </div>
 
           {/* Right Action Buttons */}
-          <div style={{
+          <div className="ask-expert-btns" style={{
             display: 'flex',
             flexDirection: 'column',
             gap: '0.85rem',
@@ -78,7 +78,7 @@ export default function AskExpertCTA({ onOpenConsultation }) {
           }}>
             <button
               onClick={onOpenConsultation}
-              className="btn btn-primary btn-lg"
+              className="btn btn-primary btn-lg ask-expert-btn"
               style={{ padding: '0.95rem 1.6rem' }}
             >
               <Stethoscope size={18} color="#050B18" />
@@ -87,7 +87,7 @@ export default function AskExpertCTA({ onOpenConsultation }) {
 
             <button
               onClick={handleWhatsApp}
-              className="btn btn-whatsapp btn-lg"
+              className="btn btn-whatsapp btn-lg ask-expert-btn"
               style={{ padding: '0.95rem 1.6rem' }}
             >
               <MessageCircle size={18} />

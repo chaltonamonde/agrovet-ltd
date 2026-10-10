@@ -277,9 +277,9 @@ export default function Navbar({
             {/* Account Profile */}
             <button
               onClick={onOpenAccount}
-              className="btn btn-icon btn-outline"
+              className="btn btn-icon btn-outline nav-account-btn"
               title="Farmer Account & Orders"
-              style={{ width: '40px', height: '40px' }}
+              style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}
               aria-label="Farmer Account"
             >
               <User size={18} color="#E2E8F0" />
@@ -288,12 +288,13 @@ export default function Navbar({
             {/* Cart Drawer Trigger */}
             <button
               onClick={onOpenCart}
-              className="btn btn-primary"
+              className="btn btn-primary nav-cart-btn"
               style={{
                 position: 'relative',
                 padding: '0.6rem 1.1rem',
                 gap: '0.45rem',
-                fontSize: '0.875rem'
+                fontSize: '0.875rem',
+                minHeight: '44px'
               }}
               aria-label={`Shopping cart with ${cartCount} items`}
             >
@@ -317,9 +318,8 @@ export default function Navbar({
             {/* Mobile Hamburger Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="btn btn-icon btn-outline"
-              style={{ display: 'inline-flex', width: '40px', height: '40px' }}
-              className="mobile-toggle"
+              className="btn btn-icon btn-outline mobile-toggle"
+              style={{ display: 'inline-flex', width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}

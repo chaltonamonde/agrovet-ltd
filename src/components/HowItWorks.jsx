@@ -30,26 +30,31 @@ export default function HowItWorks({ onShopNow }) {
   ];
 
   return (
-    <section style={{
+    <section className="how-it-works-section" style={{
       padding: '4.5rem 0',
       backgroundColor: '#071228',
       borderTop: '1px solid rgba(30, 107, 255, 0.2)',
       borderBottom: '1px solid rgba(30, 107, 255, 0.2)'
     }}>
       <div className="container">
-        <div style={{ textAlign: 'center', maxWidth: '720px', margin: '0 auto 3.5rem auto' }}>
+        <div className="section-header" style={{ textAlign: 'center', maxWidth: '720px', margin: '0 auto 3.5rem auto' }}>
           <span className="badge badge-gold" style={{ marginBottom: '0.85rem' }}>
             Simple & Transparent
           </span>
-          <h2 style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.75rem)', fontWeight: 800, color: '#FFFFFF', marginBottom: '0.75rem' }}>
+          <h2 className="section-title" style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.75rem)', fontWeight: 800, color: '#FFFFFF', marginBottom: '0.75rem' }}>
             How Farming with <span className="text-gradient-gold">Agrovet ltd</span> Works
           </h2>
-          <p style={{ color: '#94A3B8', fontSize: '1.05rem' }}>
+          <p className="section-desc" style={{ color: '#94A3B8', fontSize: '1.05rem' }}>
             From placing your order online to receiving sealed inputs right at your farm gate.
           </p>
         </div>
 
-        <div style={{
+        {/* Mobile Swipe Hint */}
+        <div className="mobile-swipe-hint">
+          <span>← Swipe steps →</span>
+        </div>
+
+        <div className="steps-grid" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
           gap: '1.5rem',
@@ -58,7 +63,7 @@ export default function HowItWorks({ onShopNow }) {
           {steps.map((step, idx) => (
             <div 
               key={idx}
-              className="card-glass"
+              className="card-glass step-card"
               style={{
                 padding: '2rem 1.5rem',
                 backgroundColor: 'rgba(10, 23, 51, 0.85)',
@@ -75,7 +80,7 @@ export default function HowItWorks({ onShopNow }) {
                   justifyContent: 'space-between',
                   marginBottom: '1.25rem'
                 }}>
-                  <div style={{
+                  <div className="step-icon-wrap" style={{
                     width: '52px',
                     height: '52px',
                     borderRadius: '12px',
@@ -87,7 +92,7 @@ export default function HowItWorks({ onShopNow }) {
                   }}>
                     {step.icon}
                   </div>
-                  <span style={{
+                  <span className="step-number" style={{
                     fontFamily: 'var(--font-display)',
                     fontSize: '2rem',
                     fontWeight: 800,
@@ -97,10 +102,10 @@ export default function HowItWorks({ onShopNow }) {
                   </span>
                 </div>
 
-                <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '0.5rem' }}>
+                <h3 className="step-title" style={{ fontSize: '1.15rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '0.5rem' }}>
                   {step.title}
                 </h3>
-                <p style={{ fontSize: '0.875rem', color: '#94A3B8', lineHeight: 1.5 }}>
+                <p className="step-desc" style={{ fontSize: '0.875rem', color: '#94A3B8', lineHeight: 1.5 }}>
                   {step.description}
                 </p>
               </div>

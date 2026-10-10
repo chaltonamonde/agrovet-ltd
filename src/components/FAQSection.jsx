@@ -10,21 +10,21 @@ export default function FAQSection() {
   };
 
   return (
-    <section style={{
+    <section className="faq-section" style={{
       padding: '5rem 0',
       backgroundColor: '#071228',
       position: 'relative'
     }}>
       <div className="container">
         {/* Header */}
-        <div style={{ textAlign: 'center', maxWidth: '720px', margin: '0 auto 3.5rem auto' }}>
+        <div className="section-header" style={{ textAlign: 'center', maxWidth: '720px', margin: '0 auto 3.5rem auto' }}>
           <span className="badge badge-blue" style={{ marginBottom: '0.85rem' }}>
             Frequently Asked Questions
           </span>
-          <h2 style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.75rem)', fontWeight: 800, color: '#FFFFFF', marginBottom: '0.85rem' }}>
+          <h2 className="section-title" style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.75rem)', fontWeight: 800, color: '#FFFFFF', marginBottom: '0.85rem' }}>
             Got Questions? <span className="text-gradient-gold">We’ve Got Answers.</span>
           </h2>
-          <p style={{ color: '#94A3B8', fontSize: '1.05rem' }}>
+          <p className="section-desc" style={{ color: '#94A3B8', fontSize: '1.05rem' }}>
             Everything you need to know about M-Pesa payments, product authenticity, and upcountry farmgate delivery.
           </p>
         </div>
@@ -42,7 +42,7 @@ export default function FAQSection() {
             return (
               <div 
                 key={idx}
-                className="card-glass"
+                className="card-glass faq-card"
                 style={{
                   backgroundColor: isOpen ? '#0D1E3F' : '#0A1733',
                   border: isOpen ? '1px solid rgba(245, 197, 66, 0.4)' : '1px solid rgba(30, 107, 255, 0.2)',
@@ -53,6 +53,7 @@ export default function FAQSection() {
               >
                 <button
                   onClick={() => toggle(idx)}
+                  className="faq-trigger"
                   style={{
                     width: '100%',
                     padding: '1.25rem 1.5rem',
@@ -64,7 +65,8 @@ export default function FAQSection() {
                     cursor: 'pointer',
                     textAlign: 'left',
                     color: '#FFFFFF',
-                    gap: '1rem'
+                    gap: '1rem',
+                    minHeight: '44px'
                   }}
                   aria-expanded={isOpen}
                 >
@@ -83,14 +85,17 @@ export default function FAQSection() {
                 </button>
 
                 {isOpen && (
-                  <div style={{
-                    padding: '0 1.5rem 1.25rem 1.5rem',
-                    color: '#CBD5E1',
-                    fontSize: '0.95rem',
-                    lineHeight: 1.6,
-                    borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-                    paddingTop: '0.85rem'
-                  }}>
+                  <div 
+                    className="faq-answer"
+                    style={{
+                      padding: '0 1.5rem 1.25rem 1.5rem',
+                      color: '#CBD5E1',
+                      fontSize: '0.95rem',
+                      lineHeight: 1.6,
+                      borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+                      paddingTop: '0.85rem'
+                    }}
+                  >
                     {faq.answer}
                   </div>
                 )}

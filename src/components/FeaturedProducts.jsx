@@ -29,14 +29,14 @@ export default function FeaturedProducts({
   const displayedProducts = getFilteredProducts();
 
   return (
-    <section style={{
+    <section className="featured-section" style={{
       padding: '4.5rem 0',
       backgroundColor: '#050B18',
       position: 'relative'
     }}>
       <div className="container">
         {/* Section Header */}
-        <div style={{
+        <div className="section-header" style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'flex-end',
@@ -63,7 +63,7 @@ export default function FeaturedProducts({
               <span>Certified Top Demand Inputs</span>
             </div>
 
-            <h2 style={{
+            <h2 className="section-title" style={{
               fontSize: 'clamp(1.8rem, 3.5vw, 2.75rem)',
               fontWeight: 800,
               color: '#FFFFFF',
@@ -74,7 +74,7 @@ export default function FeaturedProducts({
           </div>
 
           {/* Curated Filter Tabs */}
-          <div style={{
+          <div className="featured-tabs" style={{
             display: 'flex',
             backgroundColor: '#0A1733',
             padding: '4px',
@@ -93,6 +93,7 @@ export default function FeaturedProducts({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
+                className="featured-tab-btn"
                 style={{
                   padding: '0.55rem 0.95rem',
                   borderRadius: '8px',
@@ -112,8 +113,8 @@ export default function FeaturedProducts({
           </div>
         </div>
 
-        {/* 4 Cards Grid */}
-        <div style={{
+        {/* 4 Cards Grid (2-column on mobile) */}
+        <div className="products-grid" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
           gap: '1.5rem',

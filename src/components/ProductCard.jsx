@@ -43,7 +43,7 @@ export default function ProductCard({
   return (
     <div 
       onClick={() => onOpenProductModal(product)}
-      className="card-glass card-interactive"
+      className="card-glass card-interactive product-card"
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -58,17 +58,22 @@ export default function ProductCard({
       }}
     >
       {/* Product Image & Badges Overlay */}
-      <div style={{
-        position: 'relative',
-        width: '100%',
-        height: '210px',
-        backgroundColor: '#071226',
-        overflow: 'hidden'
-      }}>
+      <div 
+        className="product-card-img-wrap"
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: '210px',
+          backgroundColor: '#071226',
+          overflow: 'hidden'
+        }}
+      >
         <img 
           src={product.image} 
           alt={product.name}
           loading="lazy"
+          width="300"
+          height="300"
           style={{
             width: '100%',
             height: '100%',
@@ -79,17 +84,20 @@ export default function ProductCard({
         />
 
         {/* Top Badges */}
-        <div style={{
-          position: 'absolute',
-          top: '10px',
-          left: '10px',
-          right: '10px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          gap: '0.4rem',
-          pointerEvents: 'none'
-        }}>
+        <div 
+          className="product-card-badges"
+          style={{
+            position: 'absolute',
+            top: '10px',
+            left: '10px',
+            right: '10px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            gap: '0.4rem',
+            pointerEvents: 'none'
+          }}
+        >
           <div>
             {isRestricted ? (
               <span className="badge badge-restricted" style={{ fontSize: '0.68rem', boxShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
@@ -139,21 +147,27 @@ export default function ProductCard({
       </div>
 
       {/* Product Content Body */}
-      <div style={{
-        padding: '1.25rem',
-        display: 'flex',
-        flexDirection: 'column',
-        flex: 1,
-        justifyContent: 'space-between'
-      }}>
+      <div 
+        className="product-card-body"
+        style={{
+          padding: '1.25rem',
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          justifyContent: 'space-between'
+        }}
+      >
         <div>
           {/* Brand & Rating Row */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '0.4rem'
-          }}>
+          <div 
+            className="product-card-meta"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '0.4rem'
+            }}
+          >
             <span style={{
               fontSize: '0.75rem',
               color: '#60A5FA',
@@ -176,33 +190,39 @@ export default function ProductCard({
           </div>
 
           {/* Product Title */}
-          <h3 style={{
-            fontSize: '1.05rem',
-            fontWeight: 700,
-            color: '#FFFFFF',
-            lineHeight: 1.35,
-            marginBottom: '0.5rem',
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden'
-          }}>
+          <h3 
+            className="product-card-title"
+            style={{
+              fontSize: '1.05rem',
+              fontWeight: 700,
+              color: '#FFFFFF',
+              lineHeight: 1.35,
+              marginBottom: '0.5rem',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden'
+            }}
+          >
             {product.name}
           </h3>
 
           {/* Active Ingredient (Verification Signal) */}
-          <div style={{
-            backgroundColor: 'rgba(5, 11, 24, 0.6)',
-            border: '1px solid rgba(255, 255, 255, 0.05)',
-            borderRadius: '6px',
-            padding: '0.35rem 0.6rem',
-            marginBottom: '0.75rem',
-            fontSize: '0.75rem',
-            color: '#94A3B8',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.35rem'
-          }}>
+          <div 
+            className="product-card-ingredient"
+            style={{
+              backgroundColor: 'rgba(5, 11, 24, 0.6)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              borderRadius: '6px',
+              padding: '0.35rem 0.6rem',
+              marginBottom: '0.75rem',
+              fontSize: '0.75rem',
+              color: '#94A3B8',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem'
+            }}
+          >
             <ShieldCheck size={13} color="#10B981" style={{ flexShrink: 0 }} />
             <span style={{ 
               overflow: 'hidden', 
@@ -214,29 +234,38 @@ export default function ProductCard({
           </div>
 
           {/* Pack size indicator */}
-          <div style={{
-            fontSize: '0.75rem',
-            color: '#64748B',
-            marginBottom: '0.85rem'
-          }}>
+          <div 
+            className="product-card-sizes"
+            style={{
+              fontSize: '0.75rem',
+              color: '#64748B',
+              marginBottom: '0.85rem'
+            }}
+          >
             Sizes: {product.packSizes.map(p => p.size).join(' • ')}
           </div>
         </div>
 
         {/* Pricing & CTA Row */}
         <div>
-          <div style={{
-            display: 'flex',
-            alignItems: 'baseline',
-            gap: '0.4rem',
-            marginBottom: '0.9rem'
-          }}>
-            <span style={{
-              fontSize: '1.35rem',
-              fontWeight: 800,
-              fontFamily: 'var(--font-display)',
-              color: '#F5C542'
-            }}>
+          <div 
+            className="product-card-price-row"
+            style={{
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: '0.4rem',
+              marginBottom: '0.9rem'
+            }}
+          >
+            <span 
+              className="product-card-price"
+              style={{
+                fontSize: '1.35rem',
+                fontWeight: 800,
+                fontFamily: 'var(--font-display)',
+                color: '#F5C542'
+              }}
+            >
               KES {product.price.toLocaleString()}
             </span>
             {product.originalPrice && (
@@ -247,15 +276,18 @@ export default function ProductCard({
           </div>
 
           {/* Action Buttons */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
+          <div 
+            className="product-card-actions"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+          >
             {isRestricted ? (
               <button
                 onClick={handleActionClick}
-                className="btn btn-sm btn-outline"
+                className="btn btn-sm btn-outline product-card-btn"
                 style={{
                   flex: 1,
                   borderColor: 'rgba(239, 68, 68, 0.5)',
@@ -271,7 +303,7 @@ export default function ProductCard({
             ) : (
               <button
                 onClick={handleActionClick}
-                className="btn btn-sm btn-primary"
+                className="btn btn-sm btn-primary product-card-btn"
                 style={{
                   flex: 1,
                   padding: '0.65rem 0.6rem',
@@ -286,7 +318,7 @@ export default function ProductCard({
             {/* Quick WhatsApp Order Button */}
             <button
               onClick={handleWhatsAppOrder}
-              className="btn btn-sm btn-outline"
+              className="btn btn-sm btn-outline product-card-wa-btn"
               title="Order on WhatsApp"
               style={{
                 borderColor: 'rgba(37, 211, 102, 0.35)',

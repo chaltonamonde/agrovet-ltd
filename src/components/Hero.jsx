@@ -42,7 +42,7 @@ export default function Hero({ onShopNow, onConsultVet, onSearchSelect }) {
   };
 
   return (
-    <section style={{
+    <section className="hero-section" style={{
       position: 'relative',
       minHeight: '85vh',
       display: 'flex',
@@ -66,6 +66,7 @@ export default function Hero({ onShopNow, onConsultVet, onSearchSelect }) {
             loop
             muted
             playsInline
+            className="hero-bg-video"
             poster="https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1600&q=80"
             style={{
               width: '100%',
@@ -268,7 +269,7 @@ export default function Hero({ onShopNow, onConsultVet, onSearchSelect }) {
         </div>
 
         {/* Hero Two Buttons */}
-        <div style={{
+        <div className="hero-cta-group" style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -279,7 +280,7 @@ export default function Hero({ onShopNow, onConsultVet, onSearchSelect }) {
           {/* Shop Now (Gold) */}
           <button 
             onClick={onShopNow}
-            className="btn btn-primary btn-lg"
+            className="btn btn-primary btn-lg hero-cta-btn"
             style={{
               padding: '1rem 2.2rem',
               fontSize: '1.05rem',
@@ -295,7 +296,7 @@ export default function Hero({ onShopNow, onConsultVet, onSearchSelect }) {
             href="https://wa.me/254700123456?text=Hello%20Agrovet%20ltd,%20I%20need%20urgent%20agro-vet%20guidance%20for%20my%20farm."
             target="_blank"
             rel="noopener noreferrer"
-            className="btn btn-secondary btn-lg"
+            className="btn btn-secondary btn-lg hero-cta-btn"
             style={{
               padding: '1rem 2rem',
               fontSize: '1.05rem',
@@ -307,8 +308,8 @@ export default function Hero({ onShopNow, onConsultVet, onSearchSelect }) {
           </a>
         </div>
 
-        {/* Animated Trust Counters Grid */}
-        <div style={{
+        {/* Animated Trust Counters Grid (2x2 on mobile) */}
+        <div className="hero-stats-grid" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
           gap: '1rem',
@@ -318,7 +319,7 @@ export default function Hero({ onShopNow, onConsultVet, onSearchSelect }) {
           {TRUST_STATS.map((stat, idx) => (
             <div 
               key={idx}
-              className="card-glass"
+              className="card-glass hero-stat-card"
               style={{
                 padding: '1.25rem 1rem',
                 textAlign: 'center',

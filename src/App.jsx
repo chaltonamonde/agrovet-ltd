@@ -22,6 +22,7 @@ import WholesaleModal from './components/WholesaleModal';
 import AccountModal from './components/AccountModal';
 import RestockDiscountModal from './components/RestockDiscountModal';
 import StickyWhatsApp from './components/StickyWhatsApp';
+import BackToTop from './components/BackToTop';
 
 export default function App() {
   // Navigation & View State
@@ -152,7 +153,7 @@ export default function App() {
   const cartTotalCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
-    <div style={{ position: 'relative', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ position: 'relative', minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       {/* Live Canvas Background: Drifting Gold Particles & Ambient Waves */}
       <AnimatedBackground />
 
@@ -298,6 +299,9 @@ export default function App() {
       <StickyWhatsApp 
         onOpenConsultation={() => setActiveView('consultation')}
       />
+
+      {/* Floating Back to Top Button */}
+      <BackToTop />
 
       {/* Toast Notification Box */}
       {toastMessage && (

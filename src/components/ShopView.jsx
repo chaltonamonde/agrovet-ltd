@@ -35,6 +35,7 @@ export default function ShopView({
   const [inStockOnly, setInStockOnly] = useState(false);
   const [maxPrice, setMaxPrice] = useState(15000);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [showAllInMobile, setShowAllInMobile] = useState(false);
 
   // Extract distinct brands and target types
   const brands = useMemo(() => {
@@ -111,7 +112,7 @@ export default function ShopView({
   };
 
   return (
-    <div style={{
+    <div className="shop-section" style={{
       padding: '3rem 0 5rem 0',
       backgroundColor: '#050B18',
       minHeight: '80vh'
@@ -430,21 +431,35 @@ export default function ShopView({
                 </button>
               </div>
             ) : viewMode === 'grid' ? (
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-                gap: '1.5rem'
-              }}>
-                {filteredProducts.map(product => (
-                  <ProductCard 
-                    key={product.id}
-                    product={product}
-                    onAddToCart={onAddToCart}
-                    onOpenProductModal={onOpenProductModal}
-                    onConsultProduct={onConsultProduct}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="products-grid" style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+                  gap: '1.5rem'
+                }}>
+                  {filteredProducts.map((product, idx) => (
+                    <div key={product.id} className={idx >= 8 && !showAllInMobile ? 'product-hidden-mobile' : ''}>
+                      <ProductCard 
+                        product={product}
+                        onAddToCart={onAddToCart}
+                        onOpenProductModal={onOpenProductModal}
+                        onConsultProduct={onConsultProduct}
+                      />
+                    </div>
+                  ))}
+                </div>
+                {filteredProducts.length > 8 && (
+                  <div className="shop-more-mobile-wrap" style={{ textAlign: 'center', marginTop: '1.5rem' }}>
+                    <button
+                      onClick={() => setShowAllInMobile(!showAllInMobile)}
+                      className="btn btn-outline-gold"
+                      style={{ padding: '0.65rem 1.4rem', fontSize: '0.85rem' }}
+                    >
+                      {showAllInMobile ? 'Show Fewer Products' : `View All ${filteredProducts.length} Products`}
+                    </button>
+                  </div>
+                )}
+              </>
             ) : (
               /* List View */
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

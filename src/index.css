@@ -100,6 +100,8 @@ html {
 
 body {
   min-height: 100vh;
+  min-height: 100dvh;
+  max-width: 100vw;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   overflow-x: hidden;
@@ -108,7 +110,10 @@ body {
 
 #root {
   width: 100%;
+  max-width: 100vw;
   min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -526,4 +531,579 @@ button, input, select, textarea {
   color: var(--text-dim);
   font-size: 0.85em;
   margin-left: 0.4rem;
+}
+
+/* ==========================================================================
+   Mobile-Only Optimization System (Phones 320px - 768px and tighter 480px)
+   Desktop layout is preserved exactly as it is.
+   ========================================================================== */
+
+/* Floating Back to Top Button */
+.back-to-top-btn {
+  position: fixed;
+  bottom: 20px;
+  left: 16px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  background-color: #0D1B36;
+  border: 1.5px solid var(--gold-400);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6), 0 0 10px rgba(245, 197, 66, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 989;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+}
+.back-to-top-btn:active {
+  transform: scale(0.92);
+  background-color: #122347;
+}
+
+/* Base Mobile Helpers */
+.mobile-swipe-hint {
+  display: none;
+}
+.category-toggle-wrap,
+.category-card-hidden-mobile,
+.product-hidden-mobile,
+.shop-more-mobile-wrap {
+  display: none;
+}
+
+/* ==========================================================================
+   TABLET & PHONE BREAKPOINT: max-width 768px
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* Prevent horizontal scroll globally */
+  html, body, #root {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+    min-height: 100dvh !important;
+  }
+
+  .container {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  /* 2. Section Spacing: Cut vertical section padding to 32px-40px */
+  .hero-section {
+    padding-top: 1.5rem !important;
+    padding-bottom: 2rem !important;
+    min-height: auto !important;
+  }
+  .hero-bg-video {
+    display: none !important; /* Save GPU/battery and prevent jank on mobile */
+  }
+  .hero-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1600&q=80");
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.35);
+    z-index: 0;
+  }
+
+  .trustbar-section {
+    padding: 24px 0 !important;
+  }
+  .category-section {
+    padding: 32px 0 28px 0 !important;
+  }
+  .featured-section {
+    padding: 32px 0 !important;
+  }
+  .ask-expert-section {
+    padding: 32px 0 !important;
+  }
+  .how-it-works-section {
+    padding: 32px 0 !important;
+  }
+  .reviews-section {
+    padding: 32px 0 !important;
+  }
+  .faq-section {
+    padding: 32px 0 !important;
+  }
+  .shop-section {
+    padding: 24px 0 32px 0 !important;
+    min-height: auto !important;
+  }
+  .site-footer {
+    padding-top: 32px !important;
+    padding-bottom: 24px !important;
+  }
+
+  /* Reduce heading sizes with clamp() so they don't dominate */
+  .section-header {
+    margin-bottom: 1.25rem !important;
+  }
+  .section-title,
+  h2 {
+    font-size: clamp(1.35rem, 5vw, 1.75rem) !important;
+    margin-bottom: 0.45rem !important;
+    line-height: 1.25 !important;
+  }
+  .section-desc {
+    font-size: 0.85rem !important;
+    line-height: 1.45 !important;
+  }
+
+  /* 1. Product Cards in 2-Column Grid */
+  .products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .product-card {
+    border-radius: 12px !important;
+    padding: 0 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  }
+  .product-card:hover {
+    transform: none !important; /* Disable hover translation on touch screens */
+  }
+
+  .product-card-img-wrap {
+    height: auto !important;
+    aspect-ratio: 1 / 1 !important;
+    width: 100% !important;
+  }
+  .product-card-img-wrap img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+  .quick-view-overlay {
+    display: none !important; /* Remove non-touch overlay */
+  }
+
+  .product-card-badges {
+    top: 6px !important;
+    left: 6px !important;
+    right: 6px !important;
+  }
+  .product-card-badges .badge {
+    font-size: 0.6rem !important;
+    padding: 0.15rem 0.4rem !important;
+  }
+
+  .product-card-body {
+    padding: 10px !important;
+  }
+  .product-card-meta {
+    margin-bottom: 0.25rem !important;
+  }
+  .product-card-meta span:first-child {
+    font-size: 0.68rem !important;
+  }
+
+  .product-card-title {
+    font-size: 0.88rem !important;
+    line-height: 1.25 !important;
+    margin-bottom: 0.35rem !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    height: 2.3em !important;
+  }
+
+  .product-card-ingredient {
+    padding: 0.2rem 0.4rem !important;
+    font-size: 0.68rem !important;
+    margin-bottom: 0.35rem !important;
+  }
+
+  .product-card-sizes {
+    display: none !important; /* Hide long pack sizes list to keep card heights small */
+  }
+
+  .product-card-price-row {
+    margin-bottom: 0.5rem !important;
+    gap: 0.25rem !important;
+  }
+  .product-card-price {
+    font-size: 1.05rem !important;
+  }
+  .price-strike {
+    font-size: 0.72rem !important;
+  }
+
+  .product-card-actions {
+    gap: 6px !important;
+  }
+  .product-card-btn {
+    padding: 0.45rem 0.5rem !important;
+    font-size: 0.75rem !important;
+    min-height: 44px !important;
+    gap: 0.3rem !important;
+  }
+  .product-card-btn span {
+    font-size: 0.72rem !important;
+  }
+  .product-card-wa-btn {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    padding: 0.45rem !important;
+  }
+
+  /* 1 & 3. Category Grid: 2-column compact layout with toggle */
+  .category-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+  .category-card {
+    padding: 10px 10px !important;
+    min-height: auto !important;
+    border-radius: 12px !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35) !important;
+  }
+  .category-card:hover {
+    transform: none !important;
+  }
+  .category-card-icon-wrap {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 10px !important;
+    margin-bottom: 0.5rem !important;
+  }
+  .category-card-icon-wrap svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+  .category-card-count {
+    font-size: 0.65rem !important;
+    padding: 0.15rem 0.45rem !important;
+  }
+  .category-card-title {
+    font-size: 0.85rem !important;
+    margin-bottom: 0.2rem !important;
+  }
+  .category-card-desc {
+    font-size: 0.72rem !important;
+    line-height: 1.3 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+  .category-card-link {
+    display: none !important; /* Hide extra bottom link on mobile */
+  }
+
+  .category-card-hidden-mobile {
+    display: none !important;
+  }
+  .category-toggle-wrap {
+    display: block !important;
+    text-align: center;
+    margin-top: 1rem;
+  }
+  .category-toggle-btn {
+    padding: 0.6rem 1.25rem !important;
+    font-size: 0.825rem !important;
+    min-height: 44px !important;
+    width: 100% !important;
+    max-width: 320px;
+  }
+
+  /* 3. Long Lists -> Horizontal Swipe Carousels (Scroll-Snap) */
+  .mobile-swipe-hint {
+    display: block !important;
+    text-align: right;
+    font-size: 0.72rem;
+    color: var(--gold-400);
+    margin-bottom: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  /* Reviews / Testimonials Swipe Carousel */
+  .reviews-grid {
+    display: flex !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+    gap: 12px !important;
+    padding-bottom: 8px !important;
+    scrollbar-width: none !important;
+  }
+  .reviews-grid::-webkit-scrollbar {
+    display: none !important;
+  }
+  .review-card {
+    flex: 0 0 85% !important;
+    min-width: 260px !important;
+    max-width: 320px !important;
+    scroll-snap-align: start !important;
+    padding: 14px !important;
+    border-radius: 12px !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* How It Works Steps Swipe Carousel */
+  .steps-grid {
+    display: flex !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+    gap: 12px !important;
+    padding-bottom: 8px !important;
+    scrollbar-width: none !important;
+  }
+  .steps-grid::-webkit-scrollbar {
+    display: none !important;
+  }
+  .step-card {
+    flex: 0 0 78% !important;
+    min-width: 230px !important;
+    scroll-snap-align: start !important;
+    padding: 14px !important;
+    border-radius: 12px !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .step-icon-wrap {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 10px !important;
+  }
+  .step-icon-wrap svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+  .step-number {
+    font-size: 1.5rem !important;
+  }
+  .step-title {
+    font-size: 0.95rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  .step-desc {
+    font-size: 0.78rem !important;
+    line-height: 1.4 !important;
+  }
+
+  /* TrustBar: Compact 2x2 Grid */
+  .trustbar-banner {
+    display: none !important; /* Hide verbose duplicate regulatory banner on mobile */
+  }
+  .trustbar-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+  .trust-item-card {
+    padding: 10px !important;
+    border-radius: 10px !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .trust-icon-wrap {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 8px !important;
+    margin-bottom: 0.5rem !important;
+  }
+  .trust-icon-wrap svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+  .trust-title {
+    font-size: 0.85rem !important;
+    margin-bottom: 0.2rem !important;
+  }
+  .trust-desc {
+    font-size: 0.72rem !important;
+    line-height: 1.35 !important;
+    margin-bottom: 0.25rem !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+  .trust-meta {
+    display: none !important; /* Hide verbose license code on small screen */
+  }
+
+  /* Hero Adjustments */
+  .hero-section h1 {
+    font-size: clamp(1.6rem, 7vw, 2.3rem) !important;
+    line-height: 1.15 !important;
+    margin-bottom: 0.75rem !important;
+  }
+  .hero-section p {
+    font-size: 0.88rem !important;
+    line-height: 1.45 !important;
+    margin-bottom: 1.25rem !important;
+  }
+  .hero-cta-group {
+    flex-direction: column !important;
+    gap: 0.65rem !important;
+    margin-bottom: 1.5rem !important;
+    width: 100% !important;
+  }
+  .hero-cta-btn {
+    width: 100% !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.925rem !important;
+    min-height: 44px !important;
+  }
+  .hero-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+  .hero-stat-card {
+    padding: 8px !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .hero-stat-card > div:first-child {
+    font-size: 1.35rem !important;
+  }
+  .hero-stat-card > div:nth-child(2) {
+    font-size: 0.75rem !important;
+  }
+  .hero-stat-card > div:last-child {
+    font-size: 0.65rem !important;
+  }
+
+  /* Ask Expert CTA */
+  .ask-expert-card {
+    padding: 1.25rem 1rem !important;
+    border-radius: 16px !important;
+    gap: 1rem !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .ask-expert-btns {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  .ask-expert-btn {
+    width: 100% !important;
+    min-height: 44px !important;
+    padding: 0.7rem 1rem !important;
+  }
+
+  /* 4. Footer Compactness & Reachability */
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+  .footer-counties-wrap .footer-county-pill:nth-child(n+7) {
+    display: none !important; /* Show top 6 counties only on mobile */
+  }
+  .footer-counties-more {
+    display: inline-block !important;
+    font-size: 0.72rem !important;
+  }
+  .footer-regulatory-box {
+    padding: 0.75rem 0 !important;
+    margin-bottom: 1rem !important;
+    font-size: 0.72rem !important;
+    line-height: 1.45 !important;
+  }
+  .footer-bottom-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.65rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Shop View Specifics */
+  .product-hidden-mobile {
+    display: none !important;
+  }
+  .shop-more-mobile-wrap {
+    display: block !important;
+  }
+
+  /* All mobile interactive buttons guaranteed >= 44px tap target */
+  .btn {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+}
+
+/* ==========================================================================
+   TIGHT MOBILE BREAKPOINT: max-width 480px (Phones 320px - 480px)
+   ========================================================================== */
+@media (max-width: 480px) {
+  .container {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .products-grid {
+    gap: 8px !important;
+  }
+  .product-card-body {
+    padding: 8px !important;
+  }
+  .product-card-title {
+    font-size: 0.82rem !important;
+    height: 2.1em !important;
+  }
+  .product-card-price {
+    font-size: 0.98rem !important;
+  }
+  .product-card-btn {
+    padding: 0.4rem 0.45rem !important;
+  }
+  .product-card-btn span {
+    font-size: 0.68rem !important;
+  }
+  .product-card-wa-btn {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+
+  .category-grid {
+    gap: 8px !important;
+  }
+  .category-card {
+    padding: 8px 8px !important;
+  }
+  .category-card-title {
+    font-size: 0.8rem !important;
+  }
+  .category-card-desc {
+    font-size: 0.68rem !important;
+  }
+
+  .reviews-grid,
+  .steps-grid {
+    gap: 10px !important;
+  }
+  .review-card {
+    flex: 0 0 90% !important;
+    min-width: 240px !important;
+  }
+  .step-card {
+    flex: 0 0 85% !important;
+    min-width: 220px !important;
+  }
+
+  /* Floating Back to Top Button */
+  .back-to-top-btn {
+    bottom: 16px;
+    left: 12px;
+    width: 44px;
+    height: 44px;
+  }
 }

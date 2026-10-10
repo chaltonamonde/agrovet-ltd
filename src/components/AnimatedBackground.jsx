@@ -34,7 +34,8 @@ export default function AnimatedBackground() {
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // Particles system: subtle golden pollen / light specks
-    const particleCount = window.innerWidth < 768 ? 24 : 45;
+    const isMobileScreen = window.innerWidth < 768;
+    const particleCount = isMobileScreen ? 8 : 45;
     const particles = Array.from({ length: particleCount }, () => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
@@ -79,8 +80,12 @@ export default function AnimatedBackground() {
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
           ctx.fillStyle = `${p.goldHue} ${p.alpha})`;
-          ctx.shadowBlur = 8;
-          ctx.shadowColor = p.goldHue.includes('245') ? 'rgba(245, 197, 66, 0.4)' : 'rgba(30, 107, 255, 0.4)';
+          if (!isMobileScreen) {
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = p.goldHue.includes('245') ? 'rgba(245, 197, 66, 0.4)' : 'rgba(30, 107, 255, 0.4)';
+          } else {
+            ctx.shadowBlur = 0;
+          }
           ctx.fill();
         });
       }

@@ -20,7 +20,7 @@ export default function Footer({ setActiveView, onOpenWholesale, onOpenConsultat
   ];
 
   return (
-    <footer style={{
+    <footer className="site-footer" style={{
       backgroundColor: '#030814',
       borderTop: '1px solid rgba(30, 107, 255, 0.25)',
       color: '#94A3B8',
@@ -30,8 +30,8 @@ export default function Footer({ setActiveView, onOpenWholesale, onOpenConsultat
       position: 'relative'
     }}>
       <div className="container">
-        {/* Main 4 Column Grid */}
-        <div style={{
+        {/* Main 4 Column Grid (Single tidy stack on mobile) */}
+        <div className="footer-grid" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
           gap: '2.5rem',
@@ -142,7 +142,7 @@ export default function Footer({ setActiveView, onOpenWholesale, onOpenConsultat
             <p style={{ fontSize: '0.8rem', color: '#94A3B8', marginBottom: '0.75rem' }}>
               Same-day rider dispatch across Nairobi & Kiambu. Next-morning parcel service to:
             </p>
-            <div style={{
+            <div className="footer-counties-wrap" style={{
               display: 'flex',
               flexWrap: 'wrap',
               gap: '0.35rem'
@@ -150,6 +150,7 @@ export default function Footer({ setActiveView, onOpenWholesale, onOpenConsultat
               {countiesList.map((county, idx) => (
                 <span 
                   key={idx}
+                  className="footer-county-pill"
                   style={{
                     backgroundColor: 'rgba(255, 255, 255, 0.04)',
                     border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -162,7 +163,7 @@ export default function Footer({ setActiveView, onOpenWholesale, onOpenConsultat
                   {county}
                 </span>
               ))}
-              <span style={{ fontSize: '0.72rem', color: '#F5C542', alignSelf: 'center' }}>+27 more</span>
+              <span className="footer-counties-more" style={{ fontSize: '0.72rem', color: '#F5C542', alignSelf: 'center' }}>+27 more</span>
             </div>
           </div>
 
@@ -212,7 +213,7 @@ export default function Footer({ setActiveView, onOpenWholesale, onOpenConsultat
         </div>
 
         {/* Regulatory Mandatory Notice Box */}
-        <div style={{
+        <div className="footer-regulatory-box" style={{
           borderTop: '1px solid rgba(255, 255, 255, 0.08)',
           borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
           padding: '1.25rem 0',
@@ -225,7 +226,7 @@ export default function Footer({ setActiveView, onOpenWholesale, onOpenConsultat
         </div>
 
         {/* Bottom Copyright Row */}
-        <div style={{
+        <div className="footer-bottom-row" style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',

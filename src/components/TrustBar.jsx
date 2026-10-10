@@ -38,7 +38,7 @@ export default function TrustBar() {
   ];
 
   return (
-    <section style={{
+    <section className="trustbar-section" style={{
       backgroundColor: '#071329',
       borderTop: '1px solid rgba(30, 107, 255, 0.25)',
       borderBottom: '1px solid rgba(30, 107, 255, 0.25)',
@@ -47,7 +47,7 @@ export default function TrustBar() {
     }}>
       <div className="container">
         {/* Compliance Notice Banner */}
-        <div style={{
+        <div className="trustbar-banner" style={{
           backgroundColor: 'rgba(10, 25, 55, 0.6)',
           border: '1px dashed rgba(245, 197, 66, 0.35)',
           borderRadius: '8px',
@@ -72,8 +72,8 @@ export default function TrustBar() {
           </div>
         </div>
 
-        {/* 4 Trust Pillars Grid */}
-        <div style={{
+        {/* 4 Trust Pillars Grid (2x2 on mobile) */}
+        <div className="trustbar-grid" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
           gap: '1.5rem'
@@ -81,7 +81,7 @@ export default function TrustBar() {
           {trustFeatures.map((feat, index) => (
             <div 
               key={index}
-              className="card-glass"
+              className="card-glass trust-item-card"
               style={{
                 padding: '1.5rem',
                 backgroundColor: 'rgba(13, 27, 54, 0.8)',
@@ -92,7 +92,7 @@ export default function TrustBar() {
               }}
             >
               <div>
-                <div style={{
+                <div className="trust-icon-wrap" style={{
                   width: '50px',
                   height: '50px',
                   borderRadius: '12px',
@@ -106,7 +106,7 @@ export default function TrustBar() {
                 }}>
                   {feat.icon}
                 </div>
-                <h3 style={{
+                <h3 className="trust-title" style={{
                   fontSize: '1.1rem',
                   fontWeight: 700,
                   color: '#FFFFFF',
@@ -114,7 +114,7 @@ export default function TrustBar() {
                 }}>
                   {feat.title}
                 </h3>
-                <p style={{
+                <p className="trust-desc" style={{
                   fontSize: '0.875rem',
                   color: '#94A3B8',
                   lineHeight: 1.5,
@@ -124,7 +124,7 @@ export default function TrustBar() {
                 </p>
               </div>
 
-              <div style={{
+              <div className="trust-meta" style={{
                 borderTop: '1px solid rgba(255, 255, 255, 0.07)',
                 paddingTop: '0.75rem',
                 fontSize: '0.725rem',

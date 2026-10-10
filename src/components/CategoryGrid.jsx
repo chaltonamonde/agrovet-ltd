@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   ArrowRight, 
   Sparkles, 
@@ -9,11 +9,15 @@ import {
   Wrench, 
   Egg, 
   Milk,
-  Wheat
+  Wheat,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { CATEGORIES } from '../data/categories';
 
 export default function CategoryGrid({ onSelectCategory }) {
+  const [showAllMobile, setShowAllMobile] = useState(false);
+
   const getCategoryIcon = (iconName) => {
     switch (iconName) {
       case 'Wheat': return <Wheat size={28} color="#F5C542" />;
@@ -29,13 +33,13 @@ export default function CategoryGrid({ onSelectCategory }) {
   };
 
   return (
-    <section style={{
+    <section className="category-section" style={{
       padding: '5rem 0 4rem 0',
       position: 'relative'
     }}>
       <div className="container">
         {/* Section Header */}
-        <div style={{
+        <div className="section-header" style={{
           textAlign: 'center',
           maxWidth: '720px',
           margin: '0 auto 3.5rem auto'
@@ -58,7 +62,7 @@ export default function CategoryGrid({ onSelectCategory }) {
             <Sparkles size={14} color="#F5C542" />
             <span>Farmgate Supply Catalog</span>
           </div>
-          <h2 style={{
+          <h2 className="section-title" style={{
             fontSize: 'clamp(1.8rem, 3.5vw, 2.75rem)',
             fontWeight: 800,
             color: '#FFFFFF',
@@ -67,23 +71,23 @@ export default function CategoryGrid({ onSelectCategory }) {
           }}>
             Explore Products by <span className="text-gradient-gold">Farming Category</span>
           </h2>
-          <p style={{ fontSize: '1.05rem', color: '#94A3B8' }}>
+          <p className="section-desc" style={{ fontSize: '1.05rem', color: '#94A3B8' }}>
             Genuine certified products packaged direct from verified Kenyan distributors. 
             All agricultural chemicals and vet drugs are PCPB & KVB compliant.
           </p>
         </div>
 
-        {/* 8 Categories Grid */}
-        <div style={{
+        {/* Categories Grid (2-column on mobile, up to 6 on mobile by default) */}
+        <div className="category-grid" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
           gap: '1.5rem'
         }}>
-          {CATEGORIES.map((cat) => (
+          {CATEGORIES.map((cat, idx) => (
             <div
               key={cat.id}
               onClick={() => onSelectCategory(cat.id)}
-              className="card-glass card-interactive"
+              className={`card-glass card-interactive category-card ${idx >= 6 && !showAllMobile ? 'category-card-hidden-mobile' : ''}`}
               style={{
                 padding: '1.75rem 1.5rem',
                 cursor: 'pointer',
@@ -113,7 +117,7 @@ export default function CategoryGrid({ onSelectCategory }) {
                   justifyContent: 'space-between',
                   marginBottom: '1.25rem'
                 }}>
-                  <div style={{
+                  <div className="category-card-icon-wrap" style={{
                     width: '56px',
                     height: '56px',
                     borderRadius: '14px',
@@ -126,12 +130,12 @@ export default function CategoryGrid({ onSelectCategory }) {
                   }}>
                     {getCategoryIcon(cat.icon)}
                   </div>
-                  <span className="badge badge-blue" style={{ fontSize: '0.72rem' }}>
+                  <span className="badge badge-blue category-card-count" style={{ fontSize: '0.72rem' }}>
                     {cat.itemCount}+ Items
                   </span>
                 </div>
 
-                <h3 style={{
+                <h3 className="category-card-title" style={{
                   fontSize: '1.2rem',
                   fontWeight: 700,
                   color: '#FFFFFF',
@@ -140,7 +144,7 @@ export default function CategoryGrid({ onSelectCategory }) {
                   {cat.name}
                 </h3>
 
-                <p style={{
+                <p className="category-card-desc" style={{
                   fontSize: '0.85rem',
                   color: '#94A3B8',
                   lineHeight: 1.5
@@ -149,7 +153,7 @@ export default function CategoryGrid({ onSelectCategory }) {
                 </p>
               </div>
 
-              <div style={{
+              <div className="category-card-link" style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.4rem',
@@ -165,6 +169,17 @@ export default function CategoryGrid({ onSelectCategory }) {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Mobile View More Categories Toggle Button */}
+        <div className="category-toggle-wrap">
+          <button
+            onClick={() => setShowAllMobile(!showAllMobile)}
+            className="btn btn-outline-gold category-toggle-btn"
+          >
+            <span>{showAllMobile ? 'Show Fewer Categories' : 'View All 8 Farming Categories'}</span>
+            {showAllMobile ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
         </div>
       </div>
     </section>
