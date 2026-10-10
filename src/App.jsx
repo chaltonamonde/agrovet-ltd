@@ -26,7 +26,7 @@ import RestockDiscountModal from './components/RestockDiscountModal';
 import StickyWhatsApp from './components/StickyWhatsApp';
 import BackToTop from './components/BackToTop';
 import { PRODUCTS } from './data/products';
-import { INITIAL_ORDERS, INITIAL_SERVICE_BOOKINGS } from './data/adminData';
+import { INITIAL_ORDERS, INITIAL_SERVICE_BOOKINGS, INITIAL_INQUIRIES } from './data/adminData';
 
 const isUrlAdmin = () => {
   if (typeof window === 'undefined') return false;
@@ -151,6 +151,25 @@ export default function App() {
     }
   }, [services]);
 
+  // Dynamic Customer Inquiries, Messages & Wholesale State
+  const [inquiries, setInquiries] = useState(() => {
+    try {
+      const saved = localStorage.getItem('agrovet_inquiries');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.warn('Failed to parse saved inquiries from localStorage:', e);
+    }
+    return INITIAL_INQUIRIES;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('agrovet_inquiries', JSON.stringify(inquiries));
+    } catch (e) {
+      console.warn('Failed to save inquiries to localStorage:', e);
+    }
+  }, [inquiries]);
+
   // Reset to original factory products
   const handleResetDefaultProducts = () => {
     setProducts(PRODUCTS);
@@ -160,10 +179,59 @@ export default function App() {
     showToast('Catalog restored to original factory defaults!');
   };
 
-  // Add new completed order
+  // Add new completed order & automatically decrement inventory stock
   const handleAddOrder = (newOrder) => {
     setOrders(prev => [newOrder, ...prev]);
-    showToast(`Order ${newOrder.id} logged in system!`);
+    // Deduct ordered quantities from live products catalog
+    if (newOrder.items && newOrder.items.length > 0) {
+      setProducts(prevProducts => prevProducts.map(p => {
+        const itemOrdered = newOrder.items.find(it => it.id === p.id);
+        if (itemOrdered) {
+          const newStock = Math.max(0, (p.stockCount || 0) - (itemOrdered.qty || 1));
+          return {
+            ...p,
+            stockCount: newStock,
+            isLowStock: newStock <= 10
+          };
+        }
+        return p;
+      }));
+    }
+    showToast(`Order ${newOrder.id} logged in system & inventory updated!`);
+  };
+
+  // Add new clinical service booking from consultation
+  const handleAddService = (newService) => {
+    setServices(prev => [newService, ...prev]);
+    // Also create an inquiry entry in inquiries log
+    const serviceInquiry = {
+      id: `INQ-${newService.id.replace('SRV-', '')}`,
+      date: newService.date,
+      time: newService.time || 'Just now',
+      type: 'Clinical Triage',
+      name: newService.farmerName,
+      phone: newService.phone,
+      county: newService.county,
+      subject: `${newService.serviceType} (${newService.urgency || 'Urgent'})`,
+      message: newService.issue,
+      status: 'Pending Reply'
+    };
+    setInquiries(prev => [serviceInquiry, ...prev]);
+    showToast(`Consultation case ${newService.id} submitted & queued for staff review!`);
+  };
+
+  // Add customer inquiry or message from contact / wholesale / product consultation
+  const handleAddInquiry = (inquiryData) => {
+    const newInq = {
+      id: `INQ-2026-${Math.floor(100 + Math.random() * 900)}`,
+      date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+      time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+      status: 'Pending Reply',
+      ...inquiryData
+    };
+    setInquiries(prev => [newInq, ...prev]);
+    showToast(`Inquiry sent! Ref: ${newInq.id}. Staff desk notified.`);
+    return newInq;
   };
 
   // Shopping Cart State
@@ -278,6 +346,14 @@ export default function App() {
 
   const handleConsultProduct = (product) => {
     if (selectedProductModal) setSelectedProductModal(null);
+    handleAddInquiry({
+      type: 'Product Inquiry',
+      name: 'Storefront Visitor',
+      phone: 'Direct WhatsApp Chat',
+      county: 'Kenya Nationwide',
+      subject: `Prescription Inquiry: ${product.name}`,
+      message: `Farmer initiated consultation on ${product.name} (${product.brand}, Active Ingredient: ${product.activeIngredient}). Prescription and dosage verification needed.`
+    });
     const text = encodeURIComponent(
       `Hello Dr. Peter Karanja,\n` +
       `I want to consult before purchasing regulated product: ${product.name} (${product.activeIngredient}).\n` +
@@ -308,6 +384,8 @@ export default function App() {
               setOrders={setOrders}
               services={services}
               setServices={setServices}
+              inquiries={inquiries}
+              setInquiries={setInquiries}
               onBackToShop={handleBackToStorefront}
               onResetDefaultProducts={handleResetDefaultProducts}
               onLock={handleAdminLogout}
@@ -382,7 +460,9 @@ export default function App() {
             )}
 
             {activeView === 'consultation' && (
-              <ConsultationSection />
+              <ConsultationSection 
+                onAddService={handleAddService}
+              />
             )}
 
             {activeView === 'learn' && (
@@ -396,7 +476,9 @@ export default function App() {
             )}
 
             {activeView === 'contact' && (
-              <ContactSection />
+              <ContactSection 
+                onAddInquiry={handleAddInquiry}
+              />
             )}
           </div>
 
@@ -449,6 +531,7 @@ export default function App() {
       <WholesaleModal 
         isOpen={isWholesaleOpen}
         onClose={() => setIsWholesaleOpen(false)}
+        onAddInquiry={handleAddInquiry}
       />
 
       {/* Customer Account & Past Orders Modal */}

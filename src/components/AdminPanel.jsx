@@ -56,12 +56,24 @@ export default function AdminPanel({
   setOrders,
   services,
   setServices,
+  inquiries = [],
+  setInquiries = () => {},
   onBackToShop,
   onResetDefaultProducts,
   onLock
 }) {
   // Tab alias map: URL aliases → internal tab IDs
-  const TAB_ALIAS = { catalog: 'inventory', shop: 'inventory', analytics: 'analytics', inventory: 'inventory', orders: 'orders', services: 'services', settings: 'settings' };
+  const TAB_ALIAS = { 
+    catalog: 'inventory', 
+    shop: 'inventory', 
+    analytics: 'analytics', 
+    inventory: 'inventory', 
+    orders: 'orders', 
+    services: 'services', 
+    inquiries: 'inquiries', 
+    messages: 'inquiries', 
+    settings: 'settings' 
+  };
 
   // Read tab from URL ?tab= on initial render
   const getInitialTab = () => {
@@ -72,7 +84,7 @@ export default function AdminPanel({
     return 'analytics';
   };
 
-  // Navigation Tabs: 'analytics' | 'inventory' | 'orders' | 'services' | 'settings'
+  // Navigation Tabs: 'analytics' | 'inventory' | 'orders' | 'services' | 'inquiries' | 'settings'
   const [activeTab, setActiveTab] = useState(getInitialTab);
 
   // Sync URL ?tab= when tab changes
@@ -108,6 +120,11 @@ export default function AdminPanel({
   // Service Bookings Filters
   const [serviceStatusFilter, setServiceStatusFilter] = useState('all');
 
+  // Customer Inquiries & Messages Filters
+  const [inquiryTypeFilter, setInquiryTypeFilter] = useState('all'); // 'all' | 'Contact Message' | 'Wholesale Quote' | 'Clinical Triage' | 'Product Inquiry'
+  const [inquirySearch, setInquirySearch] = useState('');
+  const [inquiryStatusFilter, setInquiryStatusFilter] = useState('all'); // 'all' | 'Pending Reply' | 'Replied' | 'Followed Up' | 'Archived'
+
   // Quick Notification Toast
   const [adminToast, setAdminToast] = useState(null);
   const showToast = (msg) => {
@@ -116,7 +133,41 @@ export default function AdminPanel({
   };
 
   // ----------------------------------------------------
-  // COMPUTED KPI METRICS
+  // INQUIRIES & MESSAGES HANDLERS
+  // ----------------------------------------------------
+  const filteredInquiries = useMemo(() => {
+    return inquiries.filter(inq => {
+      const matchType = inquiryTypeFilter === 'all' || inq.type === inquiryTypeFilter;
+      const matchStatus = inquiryStatusFilter === 'all' || inq.status === inquiryStatusFilter;
+      const q = inquirySearch.toLowerCase();
+      const matchSearch = !q || 
+        inq.id?.toLowerCase().includes(q) ||
+        inq.name?.toLowerCase().includes(q) ||
+        inq.phone?.toLowerCase().includes(q) ||
+        inq.county?.toLowerCase().includes(q) ||
+        inq.subject?.toLowerCase().includes(q) ||
+        inq.message?.toLowerCase().includes(q);
+      return matchType && matchStatus && matchSearch;
+    });
+  }, [inquiries, inquiryTypeFilter, inquiryStatusFilter, inquirySearch]);
+
+  const handleUpdateInquiryStatus = (inquiryId, newStatus) => {
+    setInquiries(prev => prev.map(inq => {
+      if (inq.id === inquiryId) {
+        return { ...inq, status: newStatus };
+      }
+      return inq;
+    }));
+    showToast(`Inquiry marked as ${newStatus}!`);
+  };
+
+  const handleDeleteInquiry = (inquiryId) => {
+    setInquiries(prev => prev.filter(inq => inq.id !== inquiryId));
+    showToast('Inquiry removed from desk.');
+  };
+
+  // ----------------------------------------------------
+  // COMPUTED KPI METRICS & DYNAMIC ANALYTICS
   // ----------------------------------------------------
   const totalShopSales = useMemo(() => {
     return orders.reduce((acc, o) => acc + (o.total || 0), 0);
@@ -132,6 +183,65 @@ export default function AdminPanel({
   const lowStockCount = useMemo(() => {
     return products.filter(p => (p.stockCount !== undefined && p.stockCount <= 10) || p.isLowStock).length;
   }, [products]);
+
+  // Live Category Performance merged with dynamic orders
+  const dynamicCategoryPerformance = useMemo(() => {
+    const catMap = {};
+    CATEGORY_PERFORMANCE_DATA.forEach(c => {
+      catMap[c.id] = { ...c, liveUnits: 0, liveRev: 0 };
+    });
+
+    orders.forEach(order => {
+      order.items?.forEach(item => {
+        const prod = products.find(p => p.id === item.id || p.name === item.name);
+        const catId = prod?.category || 'veterinary-drugs';
+        if (catMap[catId]) {
+          catMap[catId].liveUnits += (item.qty || 1);
+          catMap[catId].liveRev += (item.total || ((item.price || 0) * (item.qty || 1)));
+        }
+      });
+    });
+
+    return Object.values(catMap).map(c => ({
+      ...c,
+      grossRevenue: c.grossRevenue + c.liveRev,
+      unitsSold: c.unitsSold + c.liveUnits
+    }));
+  }, [orders, products]);
+
+  // Live County Revenue merged with dynamic orders
+  const dynamicCountyRevenue = useMemo(() => {
+    const countyMap = {};
+    COUNTY_REVENUE_DATA.forEach(c => {
+      countyMap[c.county] = { ...c, dynamicRevenue: c.revenue, dynamicOrders: c.orders };
+    });
+
+    orders.forEach(order => {
+      const county = order.county || 'Nairobi & Suburbs';
+      if (!countyMap[county]) {
+        countyMap[county] = {
+          county,
+          revenue: 0,
+          orders: 0,
+          dynamicRevenue: 0,
+          dynamicOrders: 0,
+          share: '0%'
+        };
+      }
+      countyMap[county].dynamicRevenue += (order.total || 0);
+      countyMap[county].dynamicOrders += 1;
+    });
+
+    const totalRev = Object.values(countyMap).reduce((a, c) => a + c.dynamicRevenue, 0) || 1;
+    return Object.values(countyMap)
+      .map(c => ({
+        ...c,
+        revenue: c.dynamicRevenue,
+        orders: c.dynamicOrders,
+        share: `${((c.dynamicRevenue / totalRev) * 100).toFixed(1)}%`
+      }))
+      .sort((a, b) => b.revenue - a.revenue);
+  }, [orders]);
 
   // ----------------------------------------------------
   // INVENTORY OPERATIONS (EDIT THE WHOLE SHOP)
@@ -247,6 +357,7 @@ export default function AdminPanel({
       shopCatalog: products,
       customerOrders: orders,
       serviceBookings: services,
+      customerInquiries: inquiries,
       financialBenchmarks: {
         totalShopSales,
         totalServicesInflow,
@@ -423,6 +534,7 @@ export default function AdminPanel({
               { id: 'inventory', label: `📦 Shop Catalog (${products.length})`, desc: 'Edit All Products' },
               { id: 'orders', label: `🛒 Orders (${orders.length})`, desc: 'Sales & Delivery' },
               { id: 'services', label: `🩺 Bookings (${services.length})`, desc: 'Vet & Agronomy' },
+              { id: 'inquiries', label: `💬 Inquiries (${inquiries.length})`, desc: 'Messages & Quotes' },
               { id: 'settings', label: '⚙️ Settings', desc: 'Rates & Reset' }
             ].map(tab => {
               const isActive = activeTab === tab.id;
@@ -869,7 +981,7 @@ export default function AdminPanel({
                       Products Revenue
                     </span>
                     <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FFFFFF', fontFamily: 'var(--font-display)' }}>
-                      KES {CATEGORY_PERFORMANCE_DATA.reduce((a, c) => a + c.grossRevenue, 0).toLocaleString()}
+                      KES {dynamicCategoryPerformance.reduce((a, c) => a + c.grossRevenue, 0).toLocaleString()}
                     </span>
                   </div>
                 </div>
@@ -894,8 +1006,8 @@ export default function AdminPanel({
                       Revenue Generated by Category
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                      {CATEGORY_PERFORMANCE_DATA.map(cat => {
-                        const totalCatRev = CATEGORY_PERFORMANCE_DATA.reduce((a, c) => a + c.grossRevenue, 0);
+                      {dynamicCategoryPerformance.map(cat => {
+                        const totalCatRev = dynamicCategoryPerformance.reduce((a, c) => a + c.grossRevenue, 0) || 1;
                         const share = ((cat.grossRevenue / totalCatRev) * 100).toFixed(1);
                         return (
                           <div key={cat.id}>
@@ -944,9 +1056,9 @@ export default function AdminPanel({
                     <div style={{ position: 'relative', width: '160px', height: '160px' }}>
                       <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)', width: '100%', height: '100%' }}>
                         {(() => {
-                          const totalCatRev = CATEGORY_PERFORMANCE_DATA.reduce((a, c) => a + c.grossRevenue, 0);
+                          const totalCatRev = dynamicCategoryPerformance.reduce((a, c) => a + c.grossRevenue, 0) || 1;
                           let accumulatedPercent = 0;
-                          return CATEGORY_PERFORMANCE_DATA.map((cat) => {
+                          return dynamicCategoryPerformance.map((cat) => {
                             const percent = (cat.grossRevenue / totalCatRev) * 100;
                             const strokeDasharray = `${percent} ${100 - percent}`;
                             const strokeDashoffset = -accumulatedPercent;
@@ -991,7 +1103,7 @@ export default function AdminPanel({
                       marginTop: '0.75rem',
                       fontSize: '0.7rem'
                     }}>
-                      {CATEGORY_PERFORMANCE_DATA.map(cat => (
+                      {dynamicCategoryPerformance.map(cat => (
                         <div key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                           <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: cat.accent, flexShrink: 0 }} />
                           <span style={{ color: '#94A3B8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cat.name.split(' ')[0]}</span>
@@ -1021,7 +1133,7 @@ export default function AdminPanel({
                       </tr>
                     </thead>
                     <tbody>
-                      {CATEGORY_PERFORMANCE_DATA.map((cat, i) => (
+                      {dynamicCategoryPerformance.map((cat, i) => (
                         <tr 
                           key={cat.id}
                           style={{
@@ -1134,7 +1246,7 @@ export default function AdminPanel({
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {COUNTY_REVENUE_DATA.map((c, i) => (
+                    {dynamicCountyRevenue.map((c, i) => (
                       <div key={c.county} style={{
                         backgroundColor: '#0A1733',
                         border: '1px solid rgba(255, 255, 255, 0.06)',
@@ -2002,7 +2114,497 @@ export default function AdminPanel({
         )}
 
         {/* -------------------------------------------------- */}
-        {/* TAB 5: SETTINGS & COMPLIANCE TOOLS */}
+        {/* TAB 5: CUSTOMER INQUIRIES & MESSAGES DESK */}
+        {/* -------------------------------------------------- */}
+        {activeTab === 'inquiries' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', width: '100%' }}>
+            {/* Header Desk Banner */}
+            <div className="card-glass" style={{
+              backgroundColor: '#071226',
+              border: '1px solid rgba(30, 107, 255, 0.35)',
+              borderRadius: '16px',
+              padding: '1.25rem',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '1rem',
+              boxSizing: 'border-box',
+              width: '100%'
+            }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                  <MessageCircle size={20} color="#F5C542" />
+                  <h2 style={{ fontSize: 'clamp(1.1rem, 3.5vw, 1.35rem)', fontWeight: 800, color: '#FFFFFF', margin: 0 }}>
+                    Farmer Messages & Inquiries Desk
+                  </h2>
+                </div>
+                <p style={{ fontSize: '0.8rem', color: '#94A3B8', margin: 0 }}>
+                  Real-time incoming enquiries from storefront contact form, wholesale quotation desk, and clinical triage requests.
+                </p>
+              </div>
+
+              {/* Quick Counter Summary */}
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <div style={{
+                  backgroundColor: 'rgba(245, 197, 66, 0.1)',
+                  border: '1px solid rgba(245, 197, 66, 0.3)',
+                  padding: '0.4rem 0.75rem',
+                  borderRadius: '8px',
+                  textAlign: 'center'
+                }}>
+                  <span style={{ fontSize: '0.65rem', color: '#F5C542', textTransform: 'uppercase', display: 'block', fontWeight: 700 }}>
+                    Pending Action
+                  </span>
+                  <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#FFFFFF' }}>
+                    {inquiries.filter(i => i.status === 'Pending Reply').length}
+                  </span>
+                </div>
+                <div style={{
+                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  padding: '0.4rem 0.75rem',
+                  borderRadius: '8px',
+                  textAlign: 'center'
+                }}>
+                  <span style={{ fontSize: '0.65rem', color: '#10B981', textTransform: 'uppercase', display: 'block', fontWeight: 700 }}>
+                    Wholesale B2B
+                  </span>
+                  <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#FFFFFF' }}>
+                    {inquiries.filter(i => i.type === 'Wholesale Quote').length}
+                  </span>
+                </div>
+                <div style={{
+                  backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                  border: '1px solid rgba(96, 165, 250, 0.3)',
+                  padding: '0.4rem 0.75rem',
+                  borderRadius: '8px',
+                  textAlign: 'center'
+                }}>
+                  <span style={{ fontSize: '0.65rem', color: '#60A5FA', textTransform: 'uppercase', display: 'block', fontWeight: 700 }}>
+                    Total Inquiries
+                  </span>
+                  <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#FFFFFF' }}>
+                    {inquiries.length}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Filter Pills & Search Bar */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.75rem',
+              backgroundColor: '#071228',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '14px',
+              padding: '0.85rem',
+              boxSizing: 'border-box',
+              width: '100%'
+            }}>
+              {/* Type Filter Pills */}
+              <div style={{ display: 'flex', gap: '0.4rem', overflowX: 'auto', paddingBottom: '0.2rem' }}>
+                {[
+                  { id: 'all', label: `All Inquiries (${inquiries.length})` },
+                  { id: 'Contact Message', label: `Messages (${inquiries.filter(i => i.type === 'Contact Message').length})` },
+                  { id: 'Wholesale Quote', label: `Wholesale Quotes (${inquiries.filter(i => i.type === 'Wholesale Quote').length})` },
+                  { id: 'Clinical Triage', label: `Clinical Triages (${inquiries.filter(i => i.type === 'Clinical Triage').length})` },
+                  { id: 'Product Inquiry', label: `Product Queries (${inquiries.filter(i => i.type === 'Product Inquiry').length})` }
+                ].map(pill => {
+                  const isActive = inquiryTypeFilter === pill.id;
+                  return (
+                    <button
+                      key={pill.id}
+                      onClick={() => setInquiryTypeFilter(pill.id)}
+                      style={{
+                        backgroundColor: isActive ? '#1E6BFF' : 'rgba(10, 23, 51, 0.6)',
+                        border: isActive ? '1.5px solid #F5C542' : '1px solid rgba(255, 255, 255, 0.08)',
+                        color: isActive ? '#FFFFFF' : '#94A3B8',
+                        padding: '0.35rem 0.75rem',
+                        borderRadius: '9999px',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      {pill.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Search & Status Row */}
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <div style={{ flex: 1, minWidth: '220px', position: 'relative' }}>
+                  <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
+                  <input
+                    type="text"
+                    value={inquirySearch}
+                    onChange={(e) => setInquirySearch(e.target.value)}
+                    placeholder="Search by farmer name, phone, county, subject, or message..."
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem 0.75rem 0.5rem 2rem',
+                      backgroundColor: '#040B1A',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      borderRadius: '8px',
+                      color: '#FFFFFF',
+                      fontSize: '0.785rem',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Filter size={13} color="#94A3B8" />
+                  <select
+                    value={inquiryStatusFilter}
+                    onChange={(e) => setInquiryStatusFilter(e.target.value)}
+                    style={{
+                      backgroundColor: '#040B1A',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      color: '#E2E8F0',
+                      borderRadius: '8px',
+                      padding: '0.45rem 0.65rem',
+                      fontSize: '0.785rem',
+                      fontWeight: 600
+                    }}
+                  >
+                    <option value="all">All Statuses</option>
+                    <option value="Pending Reply">Pending Reply</option>
+                    <option value="Replied">Replied</option>
+                    <option value="Followed Up">Followed Up</option>
+                    <option value="Archived">Archived</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Empty State */}
+            {filteredInquiries.length === 0 && (
+              <div className="card-glass" style={{
+                textAlign: 'center',
+                padding: '3rem 1rem',
+                backgroundColor: '#071226',
+                borderRadius: '16px',
+                border: '1px dashed rgba(255, 255, 255, 0.15)'
+              }}>
+                <MessageCircle size={36} color="#64748B" style={{ margin: '0 auto 0.75rem auto' }} />
+                <h3 style={{ fontSize: '1rem', color: '#FFFFFF', margin: '0 0 0.35rem 0' }}>No inquiries match filter</h3>
+                <p style={{ fontSize: '0.8rem', color: '#94A3B8', margin: 0 }}>
+                  Incoming messages from the storefront contact form, wholesale quotation, or consultation desk will appear here instantly.
+                </p>
+              </div>
+            )}
+
+            {/* 1. Mobile Cards Layout */}
+            <div className="mobile-inquiries-cards" style={{ display: 'none', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
+              {filteredInquiries.map((inq) => {
+                const cleanPhone = (inq.phone || '').replace(/[^0-9]/g, '');
+                const waLink = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hello ${inq.name}, Agrovet ltd Support Desk is following up on your inquiry: "${inq.subject}". How can we assist you today?`)}` : null;
+                
+                return (
+                  <div key={inq.id} style={{
+                    backgroundColor: '#071228',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '12px',
+                    padding: '0.85rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.5rem',
+                    boxSizing: 'border-box',
+                    width: '100%'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 800, color: '#FFFFFF', fontFamily: 'monospace', fontSize: '0.8rem' }}>
+                        {inq.id}
+                      </span>
+                      <select
+                        value={inq.status}
+                        onChange={(e) => handleUpdateInquiryStatus(inq.id, e.target.value)}
+                        style={{
+                          backgroundColor: '#040B1A',
+                          border: inq.status === 'Replied' ? '1px solid #10B981' : inq.status === 'Pending Reply' ? '1px solid #F5C542' : '1px solid rgba(255,255,255,0.2)',
+                          color: inq.status === 'Replied' ? '#10B981' : inq.status === 'Pending Reply' ? '#F5C542' : '#94A3B8',
+                          borderRadius: '6px',
+                          padding: '0.2rem 0.45rem',
+                          fontSize: '0.72rem',
+                          fontWeight: 700
+                        }}
+                      >
+                        <option value="Pending Reply">Pending Reply</option>
+                        <option value="Replied">Replied</option>
+                        <option value="Followed Up">Followed Up</option>
+                        <option value="Archived">Archived</option>
+                      </select>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                      <span style={{
+                        backgroundColor: inq.type === 'Wholesale Quote' ? 'rgba(16, 185, 129, 0.15)' : inq.type === 'Clinical Triage' ? 'rgba(245, 197, 66, 0.15)' : 'rgba(30, 107, 255, 0.15)',
+                        color: inq.type === 'Wholesale Quote' ? '#10B981' : inq.type === 'Clinical Triage' ? '#F5C542' : '#60A5FA',
+                        border: inq.type === 'Wholesale Quote' ? '1px solid rgba(16, 185, 129, 0.35)' : inq.type === 'Clinical Triage' ? '1px solid rgba(245, 197, 66, 0.35)' : '1px solid rgba(30, 107, 255, 0.35)',
+                        borderRadius: '4px',
+                        padding: '0.15rem 0.45rem',
+                        fontSize: '0.68rem',
+                        fontWeight: 700
+                      }}>
+                        {inq.type}
+                      </span>
+                      <span style={{ fontSize: '0.72rem', color: '#64748B' }}>
+                        {inq.date} {inq.time ? `• ${inq.time}` : ''}
+                      </span>
+                    </div>
+
+                    <div style={{ fontSize: '0.8rem', color: '#FFFFFF' }}>
+                      <strong>{inq.name}</strong> • <span style={{ color: '#60A5FA' }}>{inq.phone}</span>
+                      <div style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{inq.county}</div>
+                    </div>
+
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#F5C542' }}>
+                      {inq.subject}
+                    </div>
+
+                    <div style={{
+                      backgroundColor: '#040B1A',
+                      border: '1px solid rgba(255, 255, 255, 0.05)',
+                      borderRadius: '8px',
+                      padding: '0.5rem 0.65rem',
+                      fontSize: '0.75rem',
+                      color: '#CBD5E1',
+                      lineHeight: 1.4,
+                      overflowWrap: 'anywhere'
+                    }}>
+                      {inq.message}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+                      paddingTop: '0.4rem',
+                      marginTop: '0.2rem'
+                    }}>
+                      {waLink && (
+                        <a
+                          href={waLink}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="btn btn-sm"
+                          style={{
+                            backgroundColor: '#25D366',
+                            color: '#FFFFFF',
+                            fontSize: '0.72rem',
+                            fontWeight: 700,
+                            padding: '0.3rem 0.6rem',
+                            textDecoration: 'none',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.25rem'
+                          }}
+                        >
+                          <MessageCircle size={12} />
+                          <span>WhatsApp</span>
+                        </a>
+                      )}
+                      {inq.phone && inq.phone.startsWith('+') && (
+                        <a
+                          href={`tel:${inq.phone}`}
+                          className="btn btn-sm btn-outline"
+                          style={{
+                            fontSize: '0.72rem',
+                            padding: '0.3rem 0.6rem',
+                            textDecoration: 'none',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.25rem'
+                          }}
+                        >
+                          <Phone size={12} />
+                          <span>Call</span>
+                        </a>
+                      )}
+                      <button
+                        onClick={() => handleDeleteInquiry(inq.id)}
+                        className="btn btn-sm btn-outline"
+                        style={{
+                          fontSize: '0.72rem',
+                          color: '#EF4444',
+                          borderColor: 'rgba(239, 68, 68, 0.3)',
+                          padding: '0.3rem 0.5rem',
+                          marginLeft: 'auto'
+                        }}
+                        title="Delete inquiry"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 2. Desktop Table Layout */}
+            <div className="desktop-inquiries-table card-glass" style={{
+              backgroundColor: '#071226',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              width: '100%'
+            }}>
+              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
+                <table style={{ width: '100%', minWidth: '850px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.8rem' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: '#09152E', color: '#60A5FA', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                      <th style={{ padding: '0.75rem 1rem' }}>Inquiry ID</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Type</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Farmer / Org</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Subject & Message</th>
+                      <th style={{ padding: '0.75rem 1rem' }}>Status</th>
+                      <th style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredInquiries.map((inq, i) => {
+                      const cleanPhone = (inq.phone || '').replace(/[^0-9]/g, '');
+                      const waLink = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hello ${inq.name}, Agrovet ltd Support Desk is following up on your inquiry: "${inq.subject}". How can we assist you today?`)}` : null;
+
+                      return (
+                        <tr
+                          key={inq.id}
+                          style={{
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                            backgroundColor: i % 2 === 0 ? 'rgba(6, 17, 41, 0.5)' : 'rgba(10, 23, 51, 0.3)'
+                          }}
+                        >
+                          <td style={{ padding: '0.75rem 1rem' }}>
+                            <div style={{ fontFamily: 'monospace', fontWeight: 800, color: '#FFFFFF', fontSize: '0.785rem' }}>
+                              {inq.id}
+                            </div>
+                            <div style={{ fontSize: '0.68rem', color: '#64748B' }}>
+                              {inq.date} {inq.time ? `• ${inq.time}` : ''}
+                            </div>
+                          </td>
+
+                          <td style={{ padding: '0.75rem 1rem' }}>
+                            <span style={{
+                              backgroundColor: inq.type === 'Wholesale Quote' ? 'rgba(16, 185, 129, 0.15)' : inq.type === 'Clinical Triage' ? 'rgba(245, 197, 66, 0.15)' : 'rgba(30, 107, 255, 0.15)',
+                              color: inq.type === 'Wholesale Quote' ? '#10B981' : inq.type === 'Clinical Triage' ? '#F5C542' : '#60A5FA',
+                              border: inq.type === 'Wholesale Quote' ? '1px solid rgba(16, 185, 129, 0.35)' : inq.type === 'Clinical Triage' ? '1px solid rgba(245, 197, 66, 0.35)' : '1px solid rgba(30, 107, 255, 0.35)',
+                              borderRadius: '4px',
+                              padding: '0.2rem 0.5rem',
+                              fontSize: '0.7rem',
+                              fontWeight: 700,
+                              whiteSpace: 'nowrap'
+                            }}>
+                              {inq.type}
+                            </span>
+                          </td>
+
+                          <td style={{ padding: '0.75rem 1rem' }}>
+                            <div style={{ fontWeight: 700, color: '#FFFFFF' }}>{inq.name}</div>
+                            <div style={{ fontSize: '0.72rem', color: '#60A5FA' }}>{inq.phone}</div>
+                            <div style={{ fontSize: '0.68rem', color: '#94A3B8' }}>{inq.county}</div>
+                          </td>
+
+                          <td style={{ padding: '0.75rem 1rem', maxWidth: '340px' }}>
+                            <div style={{ fontWeight: 700, color: '#F5C542', fontSize: '0.785rem', marginBottom: '0.2rem' }}>
+                              {inq.subject}
+                            </div>
+                            <div style={{ fontSize: '0.72rem', color: '#CBD5E1', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                              {inq.message}
+                            </div>
+                          </td>
+
+                          <td style={{ padding: '0.75rem 1rem' }}>
+                            <select
+                              value={inq.status}
+                              onChange={(e) => handleUpdateInquiryStatus(inq.id, e.target.value)}
+                              style={{
+                                backgroundColor: '#040B1A',
+                                border: inq.status === 'Replied' ? '1px solid #10B981' : inq.status === 'Pending Reply' ? '1px solid #F5C542' : '1px solid rgba(255,255,255,0.2)',
+                                color: inq.status === 'Replied' ? '#10B981' : inq.status === 'Pending Reply' ? '#F5C542' : '#94A3B8',
+                                borderRadius: '6px',
+                                padding: '0.25rem 0.5rem',
+                                fontSize: '0.72rem',
+                                fontWeight: 700
+                              }}
+                            >
+                              <option value="Pending Reply">Pending Reply</option>
+                              <option value="Replied">Replied</option>
+                              <option value="Followed Up">Followed Up</option>
+                              <option value="Archived">Archived</option>
+                            </select>
+                          </td>
+
+                          <td style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                              {waLink && (
+                                <a
+                                  href={waLink}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="btn btn-sm"
+                                  style={{
+                                    backgroundColor: '#25D366',
+                                    color: '#FFFFFF',
+                                    padding: '0.3rem 0.55rem',
+                                    fontSize: '0.72rem',
+                                    fontWeight: 700,
+                                    textDecoration: 'none'
+                                  }}
+                                  title="Open WhatsApp chat"
+                                >
+                                  <MessageCircle size={12} />
+                                </a>
+                              )}
+                              {inq.phone && inq.phone.startsWith('+') && (
+                                <a
+                                  href={`tel:${inq.phone}`}
+                                  className="btn btn-sm btn-outline"
+                                  style={{
+                                    padding: '0.3rem 0.55rem',
+                                    fontSize: '0.72rem',
+                                    textDecoration: 'none'
+                                  }}
+                                  title="Call customer"
+                                >
+                                  <Phone size={12} />
+                                </a>
+                              )}
+                              <button
+                                onClick={() => handleDeleteInquiry(inq.id)}
+                                className="btn btn-sm btn-outline"
+                                style={{
+                                  padding: '0.3rem 0.5rem',
+                                  fontSize: '0.72rem',
+                                  color: '#EF4444',
+                                  borderColor: 'rgba(239, 68, 68, 0.3)'
+                                }}
+                                title="Delete inquiry"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* -------------------------------------------------- */}
+        {/* TAB 6: SETTINGS & COMPLIANCE TOOLS */}
         {/* -------------------------------------------------- */}
         {activeTab === 'settings' && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '1rem', width: '100%' }}>
@@ -2887,6 +3489,9 @@ export default function AdminPanel({
           
           .desktop-services-table { display: none !important; }
           .mobile-services-cards { display: flex !important; }
+
+          .desktop-inquiries-table { display: none !important; }
+          .mobile-inquiries-cards { display: flex !important; }
         }
       `}</style>
     </div>

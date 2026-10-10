@@ -14,7 +14,7 @@ import {
   Camera
 } from 'lucide-react';
 
-export default function ConsultationSection() {
+export default function ConsultationSection({ onAddService }) {
   const [formData, setFormData] = useState({
     farmerName: '',
     phone: '',
@@ -47,10 +47,45 @@ export default function ConsultationSection() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (onAddService) {
+      onAddService({
+        id: `SRV-2026-${Math.floor(310 + Math.random() * 680)}`,
+        date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+        time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+        farmerName: formData.farmerName || 'Walk-in Farmer',
+        phone: formData.phone || '+254 700 000 000',
+        county: formData.county.includes('County') ? formData.county : `${formData.county} County`,
+        serviceType: formData.problemCategory || 'Clinical Consultation',
+        assignedSpecialist: (formData.problemCategory && (formData.problemCategory.includes('Crop') || formData.problemCategory.includes('Soil'))) ? 'Faith Muthoni (Agronomist)' : 'Dr. Peter Karanja (Vet Surgeon)',
+        issue: `${formData.farmType}: ${formData.description}`,
+        urgency: formData.urgency,
+        status: 'New Request',
+        fee: 500,
+        paid: false,
+        image: imagePreview
+      });
+    }
     setSubmitted(true);
   };
 
   const handleWhatsAppInstant = () => {
+    if (onAddService) {
+      onAddService({
+        id: `SRV-2026-${Math.floor(310 + Math.random() * 680)}`,
+        date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+        time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+        farmerName: formData.farmerName || 'WhatsApp Farmer',
+        phone: formData.phone || 'Initiated via WhatsApp link',
+        county: formData.county.includes('County') ? formData.county : `${formData.county} County`,
+        serviceType: '24/7 Digital WhatsApp Telehealth',
+        assignedSpecialist: 'Agrovet Triage Desk',
+        issue: `${formData.farmType}: ${formData.description || 'WhatsApp photo review inquiry'}`,
+        urgency: formData.urgency || 'Immediate',
+        status: 'New Request',
+        fee: 500,
+        paid: false
+      });
+    }
     const text = encodeURIComponent(
       `Hello Agrovet ltd Consultation Desk,\n` +
       `Farmer: ${formData.farmerName || 'Kenyan Farmer'}\n` +

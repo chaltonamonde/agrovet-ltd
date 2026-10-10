@@ -12,7 +12,7 @@ import {
   Building
 } from 'lucide-react';
 
-export default function ContactSection() {
+export default function ContactSection({ onAddInquiry }) {
   const [sent, setSent] = useState(false);
   const [form, setForm] = useState({
     name: '',
@@ -24,10 +24,30 @@ export default function ContactSection() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (onAddInquiry) {
+      onAddInquiry({
+        name: form.name || 'Storefront Visitor',
+        phone: form.phone || '+254 700 000 000',
+        county: form.county ? (form.county.includes('County') ? form.county : `${form.county} County`) : 'Nairobi & Suburbs',
+        subject: form.subject || 'Order & Product Inquiry',
+        message: form.message,
+        type: 'Contact Message'
+      });
+    }
     setSent(true);
   };
 
   const handleWhatsApp = () => {
+    if (onAddInquiry && form.name) {
+      onAddInquiry({
+        name: form.name,
+        phone: form.phone || 'WhatsApp Direct Link',
+        county: form.county ? `${form.county} County` : 'Kenya Nationwide',
+        subject: form.subject || 'WhatsApp Farm Desk Inquiry',
+        message: form.message || 'Customer initiated WhatsApp dialogue from Contact Desk.',
+        type: 'Contact Message'
+      });
+    }
     window.open('https://wa.me/254700123456?text=Hello%20Agrovet%20ltd,%20I%20have%20an%20inquiry%20regarding%20products%20and%20farm%20delivery.', '_blank');
   };
 

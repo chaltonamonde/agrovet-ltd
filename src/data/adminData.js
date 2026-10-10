@@ -460,3 +460,55 @@ export const INITIAL_SERVICE_BOOKINGS = [
     paid: true
   }
 ];
+
+// Initial Customer Inquiries, Messages & Wholesale Requests
+export const INITIAL_INQUIRIES = [
+  {
+    id: 'INQ-2026-104',
+    date: '10 Oct 2026',
+    time: '11:15 AM',
+    type: 'Contact Message',
+    name: 'Samuel Kiprotich',
+    phone: '+254 712 990 412',
+    county: 'Uasin Gishu County',
+    subject: 'Bulk Dairy Meal & Mineral Salt supply',
+    message: 'We have 45 lactating dairy cows in Turbo. Looking for monthly recurring supply of High-Yield Dairy Meal 50kg bags. Please provide quotation and delivery schedule.',
+    status: 'Pending Reply'
+  },
+  {
+    id: 'INQ-2026-102',
+    date: '10 Oct 2026',
+    time: '08:40 AM',
+    type: 'Wholesale Quote',
+    name: 'Makueni Farmers Cooperative Society',
+    phone: '+254 721 554 890',
+    county: 'Makueni County',
+    subject: 'Wholesale: Fertilizer & Certified Seeds',
+    message: 'Cooperative bulk order request: 300 Bags of YaraMila Power NPK 17:17:17 and 150 Bags of Panar 15 Hybrid Maize Seed. Required within 10 days.',
+    status: 'Replied'
+  },
+  {
+    id: 'INQ-2026-098',
+    date: '09 Oct 2026',
+    time: '03:20 PM',
+    type: 'Product Inquiry',
+    name: 'Ann Njeri Mwangi',
+    phone: '+254 728 331 705',
+    county: 'Murang\'a County',
+    subject: 'Inquiry on Belt 480 SC Insecticide',
+    message: 'Farmer requested dosage instructions and Pre-Harvest Interval (PHI) for French beans greenhouse block before purchasing.',
+    status: 'Replied'
+  },
+  {
+    id: 'INQ-2026-095',
+    date: '08 Oct 2026',
+    time: '01:05 PM',
+    type: 'Clinical Triage',
+    name: 'David Muthomi',
+    phone: '+254 701 448 912',
+    county: 'Meru County',
+    subject: 'Coffee Berry Borer & Foliar Nutrition',
+    message: 'Need specialist agronomy guidance on copper fungicide rotation and boron foliar application after heavy rains.',
+    status: 'Pending Reply'
+  }
+];

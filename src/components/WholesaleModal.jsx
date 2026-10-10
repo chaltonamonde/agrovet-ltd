@@ -10,7 +10,7 @@ import {
   Percent
 } from 'lucide-react';
 
-export default function WholesaleModal({ isOpen, onClose }) {
+export default function WholesaleModal({ isOpen, onClose, onAddInquiry }) {
   if (!isOpen) return null;
 
   const [submitted, setSubmitted] = useState(false);
@@ -27,10 +27,30 @@ export default function WholesaleModal({ isOpen, onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (onAddInquiry) {
+      onAddInquiry({
+        name: `${formData.orgName} (${formData.contactPerson})`,
+        phone: formData.phone || '+254 700 000 000',
+        county: formData.county ? (formData.county.includes('County') ? formData.county : `${formData.county} County`) : 'Commercial Supply',
+        subject: `Bulk Wholesale: ${formData.targetProducts} (${formData.estimatedQuantity})`,
+        message: `Entity: ${formData.orgType}. Product Demand: ${formData.targetProducts}. Estimated Quantity: ${formData.estimatedQuantity}. Delivery Schedule: ${formData.deliveryTimeframe}.`,
+        type: 'Wholesale Quote'
+      });
+    }
     setSubmitted(true);
   };
 
   const handleWhatsAppQuote = () => {
+    if (onAddInquiry) {
+      onAddInquiry({
+        name: `${formData.orgName || 'Kenyan Farm Enterprise'} (${formData.contactPerson || 'Buyer'})`,
+        phone: formData.phone || 'Via WhatsApp Direct Link',
+        county: formData.county ? `${formData.county} County` : 'Commercial Supply',
+        subject: `Wholesale Quote (WhatsApp): ${formData.targetProducts}`,
+        message: `Enterprise: ${formData.orgType}. Items: ${formData.targetProducts}. Volume: ${formData.estimatedQuantity}. Delivery: ${formData.deliveryTimeframe}.`,
+        type: 'Wholesale Quote'
+      });
+    }
     const text = encodeURIComponent(
       `Hello Agrovet ltd Wholesale Desk,\n` +
       `Organization: ${formData.orgName || 'Kenyan Farm Enterprise'}\n` +
